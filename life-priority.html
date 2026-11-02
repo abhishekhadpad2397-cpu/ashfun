@@ -1,0 +1,1463 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta name="description" content="A short interactive experience to explore your life priorities and choose one meaningful action for today.">
+
+  <title>Life Priority — ASHFUN</title>
+
+  <style>
+    :root {
+      --bg: #101018;
+      --panel: #191923;
+      --panel-hover: #222230;
+      --text: #f4f1ff;
+      --muted: #a4a0b5;
+      --accent: #b6ff75;
+      --accent-dark: #19220f;
+      --border: #30303f;
+      --purple: #a89bff;
+      --radius: 20px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(ellipse at top, #252039 0%, transparent 45%),
+        var(--bg);
+      color: var(--text);
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      line-height: 1.6;
+    }
+
+    button {
+      font: inherit;
+    }
+
+    button:focus-visible,
+    a:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 4px;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .topbar {
+      width: min(1080px, calc(100% - 36px));
+      margin: 0 auto;
+      min-height: 82px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .brand {
+      font-size: 1.25rem;
+      font-weight: 900;
+      letter-spacing: 1.5px;
+    }
+
+    .brand span {
+      color: var(--accent);
+    }
+
+    .back-link {
+      color: var(--muted);
+      font-size: 0.9rem;
+      transition: color 0.2s;
+    }
+
+    .back-link:hover {
+      color: var(--accent);
+    }
+
+    main {
+      width: min(720px, calc(100% - 36px));
+      margin: 0 auto;
+      padding: 54px 0 80px;
+    }
+
+    .intro {
+      text-align: center;
+      margin-bottom: 34px;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      margin-bottom: 16px;
+      padding: 6px 12px;
+      border: 1px solid #41404f;
+      border-radius: 100px;
+      color: var(--accent);
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.3rem, 7vw, 4.2rem);
+      line-height: 1.08;
+      letter-spacing: -2px;
+    }
+
+    h1 span {
+      color: var(--accent);
+    }
+
+    .intro p {
+      max-width: 520px;
+      margin: 18px auto 0;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .notice {
+      margin: 0 auto 24px;
+      padding: 12px 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 0.85rem;
+    }
+
+    .quiz-card,
+    .result-card {
+      padding: clamp(22px, 5vw, 38px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: rgba(25, 25, 35, 0.94);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.16);
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .progress-track {
+      height: 6px;
+      overflow: hidden;
+      border-radius: 10px;
+      background: #30303f;
+      margin-bottom: 30px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--accent);
+      border-radius: inherit;
+      transition: width 0.3s ease;
+    }
+
+    .question-category {
+      margin: 0 0 8px;
+      color: var(--purple);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 1.3px;
+      text-transform: uppercase;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: clamp(1.45rem, 4vw, 2rem);
+      line-height: 1.3;
+      letter-spacing: -0.5px;
+    }
+
+    .question-description {
+      margin: 12px 0 24px;
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    .choices {
+      display: grid;
+      gap: 12px;
+    }
+
+    .choice {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      width: 100%;
+      min-height: 74px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: #171720;
+      color: var(--text);
+      text-align: left;
+      cursor: pointer;
+      transition:
+        border-color 0.2s,
+        background 0.2s,
+        transform 0.2s;
+    }
+
+    .choice:hover {
+      border-color: #77718f;
+      background: var(--panel-hover);
+      transform: translateY(-2px);
+    }
+
+    .choice:active {
+      transform: translateY(0);
+    }
+
+    .choice.selected {
+      border-color: var(--accent);
+      background: #232b1d;
+    }
+
+    .choice-icon {
+      display: grid;
+      flex: 0 0 42px;
+      width: 42px;
+      height: 42px;
+      place-items: center;
+      border-radius: 12px;
+      background: #292838;
+      font-size: 1.25rem;
+    }
+
+    .choice.selected .choice-icon {
+      background: var(--accent);
+      color: var(--accent-dark);
+    }
+
+    .choice-copy {
+      flex: 1;
+    }
+
+    .choice-title {
+      display: block;
+      font-weight: 750;
+    }
+
+    .choice-description {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .choice-mark {
+      color: var(--accent);
+      font-size: 1.1rem;
+      font-weight: 800;
+    }
+
+    .navigation {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-top: 26px;
+    }
+
+    .button {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 48px;
+      padding: 12px 20px;
+      border: 1px solid transparent;
+      border-radius: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.2s, opacity 0.2s;
+    }
+
+    .button:hover:not(:disabled) {
+      transform: translateY(-2px);
+    }
+
+    .button:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .button-primary {
+      background: var(--accent);
+      color: #17200f;
+    }
+
+    .button-secondary {
+      border-color: var(--border);
+      background: transparent;
+      color: var(--text);
+    }
+
+    .navigation .button-primary {
+      margin-left: auto;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* Results */
+
+    .result-label {
+      margin: 0 0 8px;
+      color: var(--accent);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+    }
+
+    .result-card h2 {
+      font-size: clamp(1.8rem, 5vw, 2.6rem);
+    }
+
+    .result-intro {
+      color: var(--muted);
+      margin: 14px 0 26px;
+    }
+
+    .insight-box {
+      padding: 20px;
+      border: 1px solid #464153;
+      border-radius: 14px;
+      background: #211f2d;
+      margin-bottom: 24px;
+    }
+
+    .insight-box h3,
+    .action-section h3,
+    .reflection-section h3 {
+      margin: 0 0 8px;
+      font-size: 1.05rem;
+    }
+
+    .insight-box p,
+    .action-section p,
+    .reflection-section p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .priority-list {
+      display: grid;
+      gap: 12px;
+      margin: 18px 0 26px;
+    }
+
+    .priority-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px 14px;
+      align-items: center;
+    }
+
+    .priority-name {
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .priority-score {
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .priority-bar {
+      grid-column: 1 / -1;
+      height: 7px;
+      overflow: hidden;
+      border-radius: 10px;
+      background: #343342;
+    }
+
+    .priority-bar span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--purple);
+    }
+
+    .action-section {
+      margin-top: 26px;
+    }
+
+    .action-options {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .action-choice {
+      width: 100%;
+      padding: 13px 15px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #171720;
+      color: var(--text);
+      text-align: left;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .action-choice:hover {
+      border-color: var(--purple);
+    }
+
+    .action-choice.selected {
+      border-color: var(--accent);
+      background: #232b1d;
+    }
+
+    .action-choice span {
+      display: block;
+      font-weight: 750;
+    }
+
+    .action-choice small {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+    }
+
+    .personal-action {
+      margin-top: 18px;
+      padding: 20px;
+      border: 1px solid #596b45;
+      border-radius: 14px;
+      background: #20271b;
+    }
+
+    .personal-action .small-label {
+      color: var(--accent);
+      font-size: 0.73rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .personal-action p {
+      margin: 8px 0 0;
+      font-size: 1.05rem;
+      font-weight: 750;
+    }
+
+    .reflection-section {
+      margin-top: 28px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    .result-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+    .result-buttons .button {
+      flex: 1;
+    }
+
+    .footer {
+      margin-top: 28px;
+      color: #777487;
+      text-align: center;
+      font-size: 0.82rem;
+    }
+
+    .footer a {
+      color: var(--muted);
+    }
+
+    .footer a:hover {
+      color: var(--accent);
+    }
+
+    @media (max-width: 480px) {
+      .topbar {
+        min-height: 68px;
+      }
+
+      main {
+        padding-top: 36px;
+      }
+
+      .choice {
+        gap: 11px;
+        padding: 13px;
+      }
+
+      .choice-icon {
+        flex-basis: 36px;
+        width: 36px;
+        height: 36px;
+        font-size: 1.1rem;
+      }
+
+      .navigation .button {
+        padding: 11px 14px;
+      }
+
+      .result-buttons {
+        flex-direction: column;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        transition: none !important;
+      }
+    }
+
+    /* EXPLORE MORE ASHFUN EXPERIENCES */
+
+    .explore-more {
+      display: none;
+      margin-top: 42px;
+      padding-top: 30px;
+      border-top: 1px solid var(--border);
+    }
+
+    .explore-more.visible {
+      display: block;
+    }
+
+    .explore-eyebrow {
+      margin: 0 0 8px;
+      color: var(--accent);
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-align: center;
+    }
+
+    .explore-more > h2 {
+      text-align: center;
+      font-size: clamp(1.5rem, 4vw, 2rem);
+    }
+
+    .explore-description {
+      margin: 10px 0 22px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 0.9rem;
+    }
+
+    .explore-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .explore-card {
+      position: relative;
+      display: flex;
+      min-width: 0;
+      min-height: 220px;
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 20px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      color: var(--text);
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .explore-card:hover {
+      transform: translateY(-4px);
+    }
+
+    .explore-lavender {
+      background: linear-gradient(145deg, #29233e, #191923);
+    }
+
+    .explore-lavender:hover {
+      border-color: #a89bff;
+    }
+
+    .explore-blue {
+      background: linear-gradient(145deg, #1c3043, #191923);
+    }
+
+    .explore-blue:hover {
+      border-color: #79caff;
+    }
+
+    .explore-number {
+      color: var(--muted);
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+    }
+
+    .explore-icon {
+      margin: 18px 0 12px;
+      font-size: 2rem;
+    }
+
+    .explore-title {
+      padding-right: 20px;
+      font-size: 1.05rem;
+      font-weight: 800;
+    }
+
+    .explore-text {
+      margin-top: 6px;
+      padding-right: 8px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.5;
+    }
+
+    .explore-arrow {
+      position: absolute;
+      top: 16px;
+      right: 18px;
+      font-size: 1.2rem;
+      transition: transform 0.2s;
+    }
+
+    .explore-card:hover .explore-arrow {
+      transform: translate(3px, -3px);
+    }
+
+    @media (max-width: 480px) {
+      .explore-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .explore-card {
+        min-height: 190px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html" aria-label="ASHFUN home">
+      ASH<span>FUN</span>
+    </a>
+  </header>
+
+  <main>
+    <section class="intro" id="intro">
+      <div class="eyebrow">A small reality check</div>
+
+      <h1>What matters <span>to you?</span></h1>
+
+      <p>
+        Life gets busy. Take two minutes to explore what you value,
+        what competes for your attention, and one thing you can do today.
+      </p>
+    </section>
+
+    <div class="notice">
+      No accounts. No scores to judge you. Your answers stay in this page.
+    </div>
+
+    <section class="quiz-card" id="quiz" aria-live="polite">
+      <div class="progress-header">
+        <span id="step-label">Question 1 of 8</span>
+        <span id="progress-percent">13% complete</span>
+      </div>
+
+      <div
+        class="progress-track"
+        role="progressbar"
+        aria-label="Quiz progress"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        aria-valuenow="13"
+        id="progress-track"
+      >
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+
+      <p class="question-category" id="question-category">Your priorities</p>
+      <h2 id="question-title">Loading question...</h2>
+
+      <p class="question-description" id="question-description"></p>
+
+      <div class="choices" id="choices"></div>
+
+      <div class="navigation">
+        <button
+          class="button button-secondary"
+          id="back-button"
+          type="button"
+          disabled
+        >
+          ← Back
+        </button>
+
+        <button
+          class="button button-primary"
+          id="next-button"
+          type="button"
+          disabled
+        >
+          Next →
+        </button>
+      </div>
+    </section>
+
+    <section class="result-card hidden" id="results" aria-live="polite">
+      <p class="result-label">Your personal reflection</p>
+
+      <h2 id="result-title">Your priorities, your way.</h2>
+
+      <p class="result-intro" id="result-intro"></p>
+
+      <div class="insight-box">
+        <h3>Your strongest theme</h3>
+        <p id="strongest-insight"></p>
+      </div>
+
+      <h3>What your choices suggest</h3>
+      <p style="color: var(--muted); margin-top: 6px; font-size: 0.9rem;">
+        These are themes in your answers, not a scientific personality test.
+      </p>
+
+      <div class="priority-list" id="priority-list"></div>
+
+      <div class="insight-box">
+        <h3>Something worth noticing</h3>
+        <p id="time-insight"></p>
+      </div>
+
+      <section class="action-section">
+        <h3>Choose one thing for today</h3>
+
+        <p>
+          Keep it small enough that you can realistically do it.
+        </p>
+
+        <div class="action-options" id="action-options"></div>
+
+        <div class="personal-action hidden" id="personal-action">
+          <span class="small-label">Your commitment for today</span>
+          <p id="selected-action-text"></p>
+        </div>
+      </section>
+
+      <section class="reflection-section">
+        <h3>One question to take with you</h3>
+        <p id="reflection-question"></p>
+      </section>
+
+      <div class="result-buttons">
+        <button class="button button-primary" id="copy-button" type="button">
+          Copy my reflection
+        </button>
+
+        <button class="button button-secondary" id="restart-button" type="button">
+          Start again ↻
+        </button>
+      </div>
+    </section>
+
+    <section
+      class="explore-more"
+      id="explore-more"
+      aria-labelledby="explore-heading"
+    >
+      <p class="explore-eyebrow">DONE REFLECTING?</p>
+
+      <h2 id="explore-heading">Explore something else.</h2>
+
+      <p class="explore-description">
+        Your brain deserves a different kind of break.
+      </p>
+
+      <div class="explore-grid">
+        <a
+          class="explore-card explore-lavender"
+          href="404-error.html"
+          aria-label="Open 404: Wrong Universe"
+        >
+          <span class="explore-number">01 / WRONG UNIVERSE</span>
+          <span class="explore-icon" aria-hidden="true">🌀</span>
+          <span class="explore-title">404: Wrong Universe</span>
+          <span class="explore-text">
+            Get lost somewhere completely different.
+          </span>
+          <span class="explore-arrow" aria-hidden="true">↗</span>
+        </a>
+
+        <a
+          class="explore-card explore-blue"
+          href="mosquito-game.html"
+          aria-label="Play Mosquito Racket"
+        >
+          <span class="explore-number">02 / MOSQUITO HUNT</span>
+          <span class="explore-icon" aria-hidden="true">🦟</span>
+          <span class="explore-title">Mosquito Racket</span>
+          <span class="explore-text">
+            Grab your virtual racket and hunt those pesky mosquitoes.
+          </span>
+          <span class="explore-arrow" aria-hidden="true">↗</span>
+        </a>
+      </div>
+    </section>
+
+    <footer class="footer">
+      A little less autopilot. A little more intention.
+      <br>
+      <a href="index.html">← Back to ASHFUN home</a>
+    </footer>
+  </main>
+
+  <script>
+    "use strict";
+
+    const questions = [
+      {
+        category: "Your priorities",
+        title: "What would you most like to protect in your life?",
+        description: "Choose what feels most important to you right now.",
+        options: [
+          {
+            id: "health",
+            icon: "🌿",
+            title: "My health and energy",
+            description: "Feeling well, rested, and able to enjoy life."
+          },
+          {
+            id: "relationships",
+            icon: "❤️",
+            title: "People I care about",
+            description: "Family, friends, and meaningful relationships."
+          },
+          {
+            id: "career",
+            icon: "🚀",
+            title: "My goals and ambitions",
+            description: "Building something, learning, and making progress."
+          },
+          {
+            id: "freedom",
+            icon: "🕊️",
+            title: "My freedom and peace",
+            description: "Having choices and less unnecessary stress."
+          },
+          {
+            id: "money",
+            icon: "💰",
+            title: "Financial security",
+            description: "Feeling stable and prepared for the future."
+          }
+        ]
+      },
+      {
+        category: "Real-life trade-offs",
+        title: "Which would you choose right now?",
+        description: "There is no perfect answer. Pick the one you prefer.",
+        options: [
+          {
+            id: "money",
+            icon: "💵",
+            title: "Earn more money",
+            description: "Even if I have less free time."
+          },
+          {
+            id: "freedom",
+            icon: "🌤️",
+            title: "Have more free time",
+            description: "Even if I earn a little less."
+          }
+        ]
+      },
+      {
+        category: "Real-life trade-offs",
+        title: "What sounds more valuable to you?",
+        description: "Think about the kind of life you want to build.",
+        options: [
+          {
+            id: "career",
+            icon: "🏆",
+            title: "Faster career growth",
+            description: "More challenges and responsibility."
+          },
+          {
+            id: "health",
+            icon: "🧘",
+            title: "A calmer daily life",
+            description: "More balance and less pressure."
+          }
+        ]
+      },
+      {
+        category: "People and connection",
+        title: "Which would you rather have more of?",
+        description: "Both can matter, but choose what you need more.",
+        options: [
+          {
+            id: "relationships",
+            icon: "👥",
+            title: "More time with people",
+            description: "Being present for family and friends."
+          },
+          {
+            id: "freedom",
+            icon: "🌙",
+            title: "More time to myself",
+            description: "Space to rest, think, and recharge."
+          }
+        ]
+      },
+      {
+        category: "The future",
+        title: "Which feels more important this year?",
+        description: "Choose the direction that matters more at this stage.",
+        options: [
+          {
+            id: "money",
+            icon: "🛡️",
+            title: "Build a financial safety net",
+            description: "Save money and reduce uncertainty."
+          },
+          {
+            id: "career",
+            icon: "🧗",
+            title: "Invest in my growth",
+            description: "Develop skills and pursue opportunities."
+          }
+        ]
+      },
+      {
+        category: "Your time",
+        title: "What gets most of your attention lately?",
+        description: "Answer based on a typical week, not an ideal one.",
+        options: [
+          {
+            id: "career",
+            icon: "💻",
+            title: "Work or studying",
+            description: "Tasks, deadlines, and responsibilities."
+          },
+          {
+            id: "distraction",
+            icon: "📱",
+            title: "Scrolling and distractions",
+            description: "Time disappearing into my phone or the internet."
+          },
+          {
+            id: "relationships",
+            icon: "🏡",
+            title: "Family and friends",
+            description: "Helping people and spending time together."
+          },
+          {
+            id: "health",
+            icon: "🌱",
+            title: "My health and wellbeing",
+            description: "Exercise, sleep, rest, and personal care."
+          },
+          {
+            id: "goals",
+            icon: "🎯",
+            title: "My own goals",
+            description: "Personal projects and things I want to achieve."
+          }
+        ]
+      },
+      {
+        category: "Your energy",
+        title: "What do you feel you need more of?",
+        description: "Think about what would improve your everyday life.",
+        options: [
+          {
+            id: "health",
+            icon: "🔋",
+            title: "Energy and better rest",
+            description: "Feeling less drained throughout the day."
+          },
+          {
+            id: "relationships",
+            icon: "💬",
+            title: "Meaningful connection",
+            description: "More honest conversations and time together."
+          },
+          {
+            id: "career",
+            icon: "📈",
+            title: "Progress toward a goal",
+            description: "Feeling that my effort is moving me forward."
+          },
+          {
+            id: "freedom",
+            icon: "🌊",
+            title: "Room to breathe",
+            description: "Less pressure and more space for myself."
+          },
+          {
+            id: "money",
+            icon: "🏦",
+            title: "Greater financial confidence",
+            description: "A clearer plan for money and expenses."
+          }
+        ]
+      },
+      {
+        category: "One honest choice",
+        title: "If you had one extra free hour today, what would you do?",
+        description: "Choose what you would genuinely want, not what sounds impressive.",
+        options: [
+          {
+            id: "health",
+            icon: "🚶",
+            title: "Move, rest, or recharge",
+            description: "Do something that helps me feel better."
+          },
+          {
+            id: "relationships",
+            icon: "☎️",
+            title: "Connect with someone",
+            description: "Call, visit, or spend time with someone I care about."
+          },
+          {
+            id: "career",
+            icon: "🛠️",
+            title: "Build toward a goal",
+            description: "Make progress on something important to me."
+          },
+          {
+            id: "freedom",
+            icon: "☕",
+            title: "Enjoy some unplanned time",
+            description: "Relax without feeling that I must be productive."
+          },
+          {
+            id: "money",
+            icon: "🧾",
+            title: "Get my finances organised",
+            description: "Plan, save, or make a money decision."
+          }
+        ]
+      }
+    ];
+
+    const categories = {
+      health: {
+        label: "Health and energy",
+        reflection: "Your choices repeatedly returned to wellbeing, energy, or rest. Consider whether your current routine gives you enough room to feel well."
+      },
+      relationships: {
+        label: "People and connection",
+        reflection: "Your answers put meaningful relationships near the centre. Consider which connections you want to make more time for."
+      },
+      career: {
+        label: "Growth and ambition",
+        reflection: "Your answers leaned toward progress, learning, or achievement. Consider which goal deserves your attention instead of spreading yourself too thin."
+      },
+      freedom: {
+        label: "Freedom and peace",
+        reflection: "Your answers leaned toward autonomy, breathing room, or balance. Consider which obligation or distraction could be reduced."
+      },
+      money: {
+        label: "Financial security",
+        reflection: "Your answers highlighted stability and financial confidence. A small, practical step toward clarity may help more than worrying about everything at once."
+      },
+      distraction: {
+        label: "Attention and habits",
+        reflection: "You indicated that distractions can take up a meaningful part of your time. If that bothers you, try reclaiming one short period for something you choose deliberately."
+      },
+      goals: {
+        label: "Personal goals",
+        reflection: "Your answers highlighted your own projects and goals. Consider what small amount of consistent time would help you move forward."
+      }
+    };
+
+    const actionOptions = [
+      {
+        id: "walk",
+        title: "Take a 20-minute walk",
+        description: "A little movement and a break from screens."
+      },
+      {
+        id: "connect",
+        title: "Contact someone I care about",
+        description: "Send a message or make a short call."
+      },
+      {
+        id: "goal",
+        title: "Spend 20 minutes on one goal",
+        description: "Choose one task and ignore everything else."
+      },
+      {
+        id: "offline",
+        title: "Take a break without my phone",
+        description: "Give yourself a little quiet time."
+      },
+      {
+        id: "money",
+        title: "Review one financial decision",
+        description: "Check a budget, expense, or savings goal."
+      },
+      {
+        id: "rest",
+        title: "Make time for proper rest",
+        description: "Pause one unnecessary task and recharge."
+      }
+    ];
+
+    const answers = {};
+    let currentQuestion = 0;
+    let selectedAction = null;
+    let finalSummary = "";
+
+    const questionCategory = document.getElementById("question-category");
+    const questionTitle = document.getElementById("question-title");
+    const questionDescription = document.getElementById("question-description");
+    const choicesContainer = document.getElementById("choices");
+    const stepLabel = document.getElementById("step-label");
+    const progressPercent = document.getElementById("progress-percent");
+    const progressFill = document.getElementById("progress-fill");
+    const progressTrack = document.getElementById("progress-track");
+    const backButton = document.getElementById("back-button");
+    const nextButton = document.getElementById("next-button");
+    const quiz = document.getElementById("quiz");
+    const results = document.getElementById("results");
+
+    function renderQuestion() {
+      const question = questions[currentQuestion];
+      const selected = answers[currentQuestion];
+      const progress = Math.round(((currentQuestion + 1) / questions.length) * 100);
+
+      questionCategory.textContent = question.category;
+      questionTitle.textContent = question.title;
+      questionDescription.textContent = question.description;
+      stepLabel.textContent = `Question ${currentQuestion + 1} of ${questions.length}`;
+      progressPercent.textContent = `${progress}% complete`;
+      progressFill.style.width = `${progress}%`;
+      progressTrack.setAttribute("aria-valuenow", String(progress));
+
+      backButton.disabled = currentQuestion === 0;
+      nextButton.disabled = !selected;
+      nextButton.textContent =
+        currentQuestion === questions.length - 1 ? "See my reflection →" : "Next →";
+
+      choicesContainer.replaceChildren();
+
+      question.options.forEach((option) => {
+        const button = document.createElement("button");
+        button.type = "button";
+
+        const isSelected = selected === option.id;
+        button.className = `choice${isSelected ? " selected" : ""}`;
+        button.setAttribute("aria-pressed", String(isSelected));
+
+        const icon = document.createElement("span");
+        icon.className = "choice-icon";
+        icon.setAttribute("aria-hidden", "true");
+        icon.textContent = option.icon;
+
+        const copy = document.createElement("span");
+        copy.className = "choice-copy";
+
+        const title = document.createElement("span");
+        title.className = "choice-title";
+        title.textContent = option.title;
+
+        const description = document.createElement("span");
+        description.className = "choice-description";
+        description.textContent = option.description;
+
+        copy.append(title, description);
+
+        const mark = document.createElement("span");
+        mark.className = "choice-mark";
+        mark.textContent = isSelected ? "✓" : "";
+
+        button.append(icon, copy, mark);
+
+        button.addEventListener("click", () => {
+          answers[currentQuestion] = option.id;
+          renderQuestion();
+        });
+
+        choicesContainer.appendChild(button);
+      });
+    }
+
+    backButton.addEventListener("click", () => {
+      if (currentQuestion > 0) {
+        currentQuestion -= 1;
+        renderQuestion();
+      }
+    });
+
+    nextButton.addEventListener("click", () => {
+      if (!answers[currentQuestion]) return;
+
+      if (currentQuestion < questions.length - 1) {
+        currentQuestion += 1;
+        renderQuestion();
+      } else {
+        showResults();
+      }
+    });
+
+    function showResults() {
+      const counts = {};
+
+      Object.values(answers).forEach((answer) => {
+        counts[answer] = (counts[answer] || 0) + 1;
+      });
+
+      const sortedCategories = Object.entries(counts)
+        .sort((a, b) => b[1] - a[1]);
+
+      const strongestId = sortedCategories[0][0];
+      const strongest = categories[strongestId];
+
+      const timeAnswer = answers[5];
+      const desiredAnswer = answers[0];
+
+      document.getElementById("result-title").textContent =
+        `Make room for ${strongest.label.toLowerCase()}.`;
+
+      document.getElementById("result-intro").textContent =
+        "Your answers are a snapshot of what matters to you right now. Use them as a starting point, not a rulebook for your life.";
+
+      document.getElementById("strongest-insight").textContent =
+        strongest.reflection;
+
+      const priorityList = document.getElementById("priority-list");
+      priorityList.replaceChildren();
+
+      sortedCategories.forEach(([id, score]) => {
+        const category = categories[id];
+        if (!category) return;
+
+        const row = document.createElement("div");
+        row.className = "priority-row";
+
+        const name = document.createElement("span");
+        name.className = "priority-name";
+        name.textContent = category.label;
+
+        const scoreText = document.createElement("span");
+        scoreText.className = "priority-score";
+        scoreText.textContent = `${score} ${score === 1 ? "choice" : "choices"}`;
+
+        const bar = document.createElement("div");
+        bar.className = "priority-bar";
+        bar.setAttribute("aria-label", `${category.label}: ${score} choices`);
+
+        const fill = document.createElement("span");
+        fill.style.width = `${(score / questions.length) * 100}%`;
+
+        bar.appendChild(fill);
+        row.append(name, scoreText, bar);
+        priorityList.appendChild(row);
+      });
+
+      let timeInsight;
+
+      if (timeAnswer === "distraction") {
+        timeInsight =
+          "You said scrolling and distractions get much of your attention. If you want that to change, try setting aside just 15 minutes for your chosen priority before opening distracting apps.";
+      } else if (timeAnswer === "career" && desiredAnswer !== "career") {
+        timeInsight =
+          "Work or study takes much of your time, while your first choice was something else. Consider whether one small boundary could make room for what you value.";
+      } else if (timeAnswer === "health" && desiredAnswer !== "health") {
+        timeInsight =
+          "Wellbeing already has some of your attention. Think about whether that time feels restorative and whether it supports your other priorities too.";
+      } else if (timeAnswer === "relationships" && desiredAnswer !== "relationships") {
+        timeInsight =
+          "You spend a lot of time with people or helping others. Check whether your own needs also have enough space in your week.";
+      } else if (timeAnswer === "goals" && desiredAnswer !== "career") {
+        timeInsight =
+          "You are giving time to your own goals. Consider whether your current pace is sustainable and leaves enough room for the other things you value.";
+      } else {
+        timeInsight =
+          "Compare what you chose first with where your attention goes. They do not need to match perfectly. Even a small adjustment can help you feel more intentional.";
+      }
+
+      document.getElementById("time-insight").textContent = timeInsight;
+
+      const reflectionQuestions = {
+        health: "What is one small thing your future self would thank you for doing today?",
+        relationships: "Who would appreciate a little more of your attention this week?",
+        career: "Which one task would make you feel that you moved forward today?",
+        freedom: "What could you simplify or say no to this week?",
+        money: "What is one practical step that could improve your financial clarity?",
+        distraction: "What would you choose to do with 15 minutes reclaimed from scrolling?",
+        goals: "What is the smallest useful next step toward a goal you care about?"
+      };
+
+      document.getElementById("reflection-question").textContent =
+        reflectionQuestions[strongestId] ||
+        "What is one small change that would make this week feel more like your own?";
+
+      renderActions();
+
+      quiz.classList.add("hidden");
+      results.classList.remove("hidden");
+
+      /* Reveal Explore More only after the quiz is completed */
+      const exploreMore = document.getElementById("explore-more");
+      exploreMore.classList.add("visible");
+
+      finalSummary = buildSummary(strongest, timeInsight);
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function renderActions() {
+      const container = document.getElementById("action-options");
+      container.replaceChildren();
+
+      selectedAction = null;
+      document.getElementById("personal-action").classList.add("hidden");
+
+      actionOptions.forEach((action) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "action-choice";
+
+        const title = document.createElement("span");
+        title.textContent = action.title;
+
+        const description = document.createElement("small");
+        description.textContent = action.description;
+
+        button.append(title, description);
+
+        button.addEventListener("click", () => {
+          selectedAction = action;
+
+          container.querySelectorAll(".action-choice").forEach((item) => {
+            item.classList.remove("selected");
+            item.setAttribute("aria-pressed", "false");
+          });
+
+          button.classList.add("selected");
+          button.setAttribute("aria-pressed", "true");
+
+          document.getElementById("selected-action-text").textContent =
+            action.title;
+
+          document.getElementById("personal-action").classList.remove("hidden");
+
+          finalSummary = buildSummary(
+            categories[Object.entries(countAnswers()).sort((a, b) => b[1] - a[1])[0][0]],
+            document.getElementById("time-insight").textContent
+          );
+        });
+
+        button.setAttribute("aria-pressed", "false");
+        container.appendChild(button);
+      });
+    }
+
+    function countAnswers() {
+      const counts = {};
+
+      Object.values(answers).forEach((answer) => {
+        counts[answer] = (counts[answer] || 0) + 1;
+      });
+
+      return counts;
+    }
+
+    function buildSummary(strongest, timeInsight) {
+      const actionLine = selectedAction
+        ? `My action for today: ${selectedAction.title}`
+        : "My action for today: I will choose one small step.";
+
+      return [
+        "ASHFUN — WHAT MATTERS TO ME",
+        "",
+        `My strongest theme: ${strongest.label}`,
+        strongest.reflection,
+        "",
+        `Something to notice: ${timeInsight}`,
+        "",
+        actionLine,
+        "",
+        "My reminder: Small, realistic changes count."
+      ].join("\n");
+    }
+
+    document.getElementById("copy-button").addEventListener("click", async () => {
+      const button = document.getElementById("copy-button");
+
+      try {
+        await navigator.clipboard.writeText(finalSummary);
+        button.textContent = "Copied ✓";
+      } catch (error) {
+        const textarea = document.createElement("textarea");
+        textarea.value = finalSummary;
+        textarea.setAttribute("readonly", "");
+        textarea.style.position = "absolute";
+        textarea.style.left = "-9999px";
+
+        document.body.appendChild(textarea);
+        textarea.select();
+
+        const copied = document.execCommand("copy");
+        textarea.remove();
+
+        button.textContent = copied ? "Copied ✓" : "Copy unavailable";
+      }
+
+      window.setTimeout(() => {
+        button.textContent = "Copy my reflection";
+      }, 2000);
+    });
+
+    document.getElementById("restart-button").addEventListener("click", () => {
+      Object.keys(answers).forEach((key) => delete answers[key]);
+
+      currentQuestion = 0;
+      selectedAction = null;
+      finalSummary = "";
+
+      results.classList.add("hidden");
+      quiz.classList.remove("hidden");
+
+      /* Hide Explore More when the user restarts */
+      document.getElementById("explore-more").classList.remove("visible");
+
+      renderQuestion();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
+    renderQuestion();
+  </script>
+</body>
+</html>

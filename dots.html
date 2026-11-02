@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title></title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #ffffff;
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+    cursor: crosshair;
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="dots"></canvas>
+
+<script>
+const canvas = document.getElementById("dots");
+const ctx = canvas.getContext("2d");
+
+const spacing = 24;
+const radius = 2;
+const influenceRadius = 75;
+const followStrength = 0.09;
+const returnStrength = 0.045;
+
+const stopDelay = 700;
+const holdDuration = 1800;
+
+let width = 0;
+let height = 0;
+let dpr = 1;
+
+let dots = [];
+let path = [];
+
+let drawing = false;
+let lastPointer = null;
+let lastMoveTime = 0;
+let shapeFinishedTime = 0;
+let returning = false;
+
+let animationFrame = 0;
+
+function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+    width = window.innerWidth;
+    height = window.innerHeight;
+
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+
+    canvas.style.width = width + "px";
+    canvas.style.height = height + "px";
+
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    createDots();
+
+    path = [];
+    drawing = false;
+    returning = false;
+    lastPointer = null;
+}
+
+function createDots() {
+    dots = [];
+
+    const columns = Math.ceil(width / spacing);
+    const rows = Math.ceil(height / spacing);
+
+    const offsetX = (width - (columns - 1) * spacing) / 2;
+    const offsetY = (height - (rows - 1) * spacing) / 2;
+
+    for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < columns; col++) {
+            const x = offsetX + col * spacing;
+            const y = offsetY + row * spacing;
+
+            dots.push({
+                homeX: x,
+                homeY: y,
+                x: x,
+                y: y,
+                vx: 0,
+                vy: 0
+            });
+        }
+    }
+}
+
+// Add cursor positions to the drawing path.
+function addPathPoint(x, y) {
+    if (path.length === 0) {
+        path.push({ x, y });
+        return;
+    }
+
+    const previous = path[path.length - 1];
+
+    const dx = x - previous.x;
+    const dy = y - previous.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    // Add points at regular intervals for a smooth path.
+    const steps = Math.max(1, Math.ceil(distance / 5));
+
+    for (let i = 1; i <= steps; i++) {
+        const t = i / steps;
+
+        path.push({
+            x: previous.x + dx * t,
+            y: previous.y + dy * t
+        });
+    }
+
+    // Limit path size to keep performance stable.
+    if (path.length > 1000) {
+        path.splice(0, 200);
+    }
+}
+
+function getPointerPosition(event) {
+    const rect = canvas.getBoundingClientRect();
+
+    return {
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top
+    };
+}
+
+function startDrawing(event) {
+    event.preventDefault();
+
+    drawing = true;
+    returning = false;
+    path = [];
+
+    const pointer = getPointerPosition(event);
+
+    lastPointer = pointer;
+    lastMoveTime = performance.now();
+
+    addPathPoint(pointer.x, pointer.y);
+
+    if (canvas.setPointerCapture) {
+        canvas.setPointerCapture(event.pointerId);
+    }
+}
+
+function moveDrawing(event) {
+    const pointer = getPointerPosition(event);
+
+    if (!drawing) {
+        return;
+    }
+
+    event.preventDefault();
+
+    const dx = pointer.x - lastPointer.x;
+    const dy = pointer.y - lastPointer.y;
+
+    if (Math.sqrt(dx * dx + dy * dy) > 1) {
+        addPathPoint(pointer.x, pointer.y);
+
+        lastPointer = pointer;
+        lastMoveTime = performance.now();
+    }
+}
+
+function stopDrawing() {
+    if (!drawing) return;
+
+    drawing = false;
+    shapeFinishedTime = performance.now();
+    lastPointer = null;
+}
+
+function findClosestPathPoint(x, y) {
+    let closest = null;
+    let minDistanceSquared = influenceRadius * influenceRadius;
+
+    for (let i = 0; i < path.length; i++) {
+        const point = path[i];
+
+        const dx = point.x - x;
+        const dy = point.y - y;
+
+        const distanceSquared = dx * dx + dy * dy;
+
+        if (distanceSquared < minDistanceSquared) {
+            minDistanceSquared = distanceSquared;
+            closest = point;
+        }
+    }
+
+    return closest;
+}
+
+function updateDots() {
+    const now = performance.now();
+
+    // Detect when the user stops moving.
+    if (
+        drawing &&
+        now - lastMoveTime > stopDelay
+    ) {
+        stopDrawing();
+    }
+
+    // Hold the completed drawing before returning to the grid.
+    if (
+        !drawing &&
+        path.length > 0 &&
+        !returning &&
+        now - shapeFinishedTime > holdDuration
+    ) {
+        returning = true;
+    }
+
+    for (const dot of dots) {
+        let target = null;
+
+        if (path.length > 0 && !returning) {
+            target = findClosestPathPoint(dot.homeX, dot.homeY);
+        }
+
+        if (target) {
+            // Pull nearby dots towards the user's drawing.
+            const dx = target.x - dot.x;
+            const dy = target.y - dot.y;
+
+            dot.vx += dx * followStrength;
+            dot.vy += dy * followStrength;
+
+        } else if (returning || path.length === 0) {
+            // Bring dots back to their original grid positions.
+            const dx = dot.homeX - dot.x;
+            const dy = dot.homeY - dot.y;
+
+            dot.vx += dx * returnStrength;
+            dot.vy += dy * returnStrength;
+        }
+
+        // Smooth movement and damping.
+        dot.vx *= 0.82;
+        dot.vy *= 0.82;
+
+        dot.x += dot.vx;
+        dot.y += dot.vy;
+    }
+
+    // Clear the path after the dots have returned.
+    if (returning) {
+        let allReturned = true;
+
+        for (const dot of dots) {
+            const dx = dot.homeX - dot.x;
+            const dy = dot.homeY - dot.y;
+
+            if (Math.abs(dx) > 0.8 || Math.abs(dy) > 0.8) {
+                allReturned = false;
+                break;
+            }
+        }
+
+        if (allReturned) {
+            for (const dot of dots) {
+                dot.x = dot.homeX;
+                dot.y = dot.homeY;
+                dot.vx = 0;
+                dot.vy = 0;
+            }
+
+            path = [];
+            returning = false;
+        }
+    }
+}
+
+function draw() {
+    ctx.clearRect(0, 0, width, height);
+
+    ctx.fillStyle = "#444444";
+
+    for (const dot of dots) {
+        ctx.beginPath();
+        ctx.arc(dot.x, dot.y, radius, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+function animate() {
+    updateDots();
+    draw();
+
+    animationFrame = requestAnimationFrame(animate);
+}
+
+canvas.addEventListener("pointerdown", startDrawing);
+canvas.addEventListener("pointermove", moveDrawing);
+
+canvas.addEventListener("pointerup", stopDrawing);
+canvas.addEventListener("pointercancel", stopDrawing);
+canvas.addEventListener("lostpointercapture", stopDrawing);
+
+window.addEventListener("resize", resize);
+
+resize();
+animate();
+</script>
+
+</body>
+</html>

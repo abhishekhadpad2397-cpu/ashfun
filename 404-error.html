@@ -1,0 +1,553 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Page not found.">
+  <meta name="robots" content="noindex, follow">
+  <title>404 — Page Not Found</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #ffffff;
+      color: #20211e;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .error-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 30px 20px;
+    }
+
+    .error-content {
+      width: 100%;
+      max-width: 460px;
+      text-align: center;
+      transform: translateY(-35px);
+    }
+
+    .error-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 20px;
+      padding: 6px 10px;
+      border: 1px solid #ececec;
+      border-radius: 100px;
+      color: #66675f;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+
+    .error-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #b7a0ff;
+    }
+
+    .error-code {
+      margin: 0;
+      color: #20211e;
+      font-size: clamp(80px, 16vw, 120px);
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -6px;
+    }
+
+    .error-code span {
+      color: #d9caff;
+    }
+
+    .error-title {
+      margin: 20px 0 0;
+      font-size: clamp(20px, 4vw, 26px);
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .refresh-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 24px;
+      padding: 11px 18px;
+      border: 1px solid #e8e8e8;
+      border-radius: 6px;
+      background: transparent;
+      color: #55564f;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s ease,
+                  border-color 0.2s ease,
+                  color 0.2s ease;
+    }
+
+    .refresh-button:hover {
+      background: #f7f7f7;
+      border-color: #d8d8d8;
+      color: #20211e;
+    }
+
+    .refresh-button:focus-visible {
+      outline: 2px solid #b7a0ff;
+      outline-offset: 3px;
+    }
+
+    .refresh-button svg {
+      width: 15px;
+      height: 15px;
+      transition: transform 0.3s ease;
+    }
+
+    .refresh-button:hover svg {
+      transform: rotate(45deg);
+    }
+
+    .refresh-instruction {
+      margin: 22px 0 0;
+      color: #34352f;
+      font-size: clamp(15px, 3.5vw, 17px);
+      font-weight: 700;
+      line-height: 1.7;
+      transition: opacity 0.25s ease;
+    }
+
+    .refresh-instruction span {
+      color: #9b80ef;
+    }
+
+    .refresh-instruction.hidden {
+      display: none;
+    }
+
+    .funny-message {
+      max-width: 380px;
+      min-height: 55px;
+      margin: 20px auto 0;
+      padding: 0 5px;
+      color: #45463f;
+      font-size: clamp(16px, 3.8vw, 19px);
+      font-weight: 700;
+      line-height: 1.7;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .funny-message.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .message-count {
+      margin-top: 10px;
+      color: #aaa99f;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .message-count.visible {
+      opacity: 1;
+    }
+
+    /* Little ghost that slides in from the right */
+    .ghost-notification {
+      position: fixed;
+      right: 20px;
+      bottom: 24px;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: min(330px, calc(100vw - 32px));
+      padding: 14px 16px;
+      border: 1px solid #eee9ff;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.98);
+      box-shadow: 0 8px 30px rgba(32, 33, 30, 0.09);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateX(calc(100% + 40px));
+      transition:
+        transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1),
+        opacity 0.35s ease,
+        visibility 0.35s ease;
+      pointer-events: none;
+    }
+
+    .ghost-notification.show {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(0);
+    }
+
+    .ghost-icon {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 43px;
+      height: 43px;
+      border-radius: 12px;
+      background: #f1ebff;
+      font-size: 27px;
+      animation: ghost-float 2s ease-in-out infinite;
+    }
+
+    .ghost-text {
+      min-width: 0;
+      text-align: left;
+    }
+
+    .ghost-heading {
+      margin: 0 0 4px;
+      color: #9b80ef;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .ghost-message {
+      margin: 0;
+      color: #34352f;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+    }
+
+    @keyframes ghost-float {
+      0%, 100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-4px);
+      }
+    }
+
+    @media (max-width: 480px) {
+      .error-content {
+        transform: translateY(-20px);
+      }
+
+      .error-code {
+        letter-spacing: -4px;
+      }
+
+      .error-title {
+        margin-top: 16px;
+      }
+
+      .refresh-instruction {
+        margin-top: 20px;
+      }
+
+      .ghost-notification {
+        right: 12px;
+        bottom: 14px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .refresh-button,
+      .refresh-button svg,
+      .funny-message,
+      .message-count,
+      .refresh-instruction,
+      .ghost-notification {
+        transition: none;
+      }
+
+      .ghost-icon {
+        animation: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="error-page">
+    <section class="error-content" aria-labelledby="error-title">
+
+      <div class="error-label">
+        <span class="error-dot"></span>
+        Error 404
+      </div>
+
+      <h1 class="error-code">4<span>0</span>4</h1>
+
+      <h2 class="error-title" id="error-title">
+        Page Not Found
+      </h2>
+
+      <button
+        class="refresh-button"
+        id="refreshButton"
+        type="button"
+        aria-label="Show a funny message"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M20 7v5h-5"></path>
+          <path d="M4 17v-5h5"></path>
+          <path d="M5.6 9a7 7 0 0 1 11.6-2L20 12"></path>
+          <path d="M18.4 15a7 7 0 0 1-11.6 2L4 12"></path>
+        </svg>
+        Refresh
+      </button>
+
+      <p class="refresh-instruction" id="refreshInstruction">
+        Chal bhai, ek baar refresh pe click…
+        <span>kya pata page mil jaaye!</span>
+      </p>
+
+      <div
+        class="funny-message"
+        id="funnyMessage"
+        role="status"
+        aria-live="polite"
+      ></div>
+
+      <div
+        class="message-count"
+        id="messageCount"
+        aria-live="off"
+      ></div>
+
+    </section>
+  </main>
+
+  <!-- Ghost notification -->
+  <aside
+    class="ghost-notification"
+    id="ghostNotification"
+    role="status"
+    aria-live="polite"
+    aria-atomic="true"
+  >
+    <div class="ghost-icon" aria-hidden="true">👻</div>
+
+    <div class="ghost-text">
+      <p class="ghost-heading">A little reminder</p>
+      <p class="ghost-message" id="ghostMessage">
+        Abhi tak yahi hai, bhai? 😂
+      </p>
+    </div>
+  </aside>
+
+  <script>
+    const refreshButton = document.getElementById("refreshButton");
+    const refreshInstruction = document.getElementById("refreshInstruction");
+    const funnyMessage = document.getElementById("funnyMessage");
+    const messageCount = document.getElementById("messageCount");
+
+    const ghostNotification = document.getElementById("ghostNotification");
+    const ghostMessage = document.getElementById("ghostMessage");
+
+    const messages = [
+      "Chala ja bhai, page nahi mila! Ek baar refresh karke dekh 😂",
+      "Arre bhai, bola na page nahi hai! Phir se aa gaya? 😭",
+      "Chalo ek aur baar try karte hain... shayad page ko akal aa jaaye 🤡",
+      "Bhai, page toh gayab hai. CID ko bulayein kya? 🕵️",
+      "Refresh pe refresh maar raha hai, petrol thodi lagta hai! 😂",
+      "Lagta hai page chhutti pe gaya hai. Monday ko aana! 🏖️",
+      "Bhai itni umeed toh mujhe apne exam results se bhi nahi thi 💀",
+      "Page nahi mila, par tumhara patience kamaal ka hai! 🫡",
+      "Ek aur click? Bhai, button ko naukri se nikalwa dega kya? 😂",
+      "404 mila hai bhai, 420 nahi! Seedha ghar ja 😭",
+      "Page Himalaya chala gaya hai, dhoondhne mein time lagega 🏔️",
+      "Internet theek hai bhai, bas page ne ghost kar diya 👻",
+      "Chalo phir se! Kya pata agle click mein lottery lag jaaye 🎰",
+      "Bhai tu refresh kar, main tab tak chai pee ke aata hoon ☕",
+      "Itni baar toh log apne crush ka last seen bhi nahi dekhte 😂",
+      "Page abhi available nahi hai. Uska breakup chal raha hai 💔",
+      "Bhai, button thak gaya hai... thoda reham kar! 🥲",
+      "Koshish karne walon ki haar nahi hoti... par page phir bhi nahi mila 🤣",
+      "Bas kar bhai! Page nahi, tera dedication legendary hai 🏆",
+      "Aakhri baar bol raha hoon... achha chalo, ek baar aur 😂",
+      "Bhai, page nahi mil raha, Google Maps khol ke dekhein kya? 🗺️",
+      "Page itna lazy hai ki aane ka mann hi nahi kar raha 😂",
+      "Bhai, refresh button tera best friend ban gaya hai kya? 🤝",
+      "Page ne bola: aaj mood nahi hai, kal try karna 😴",
+      "404 dekh ke bhi nahi maana? Bhai tu alag hi level hai 💀",
+      "Bhai, page ko dhoondhne nikle the, ab khud kho gaye 🤡",
+      "Refresh karte karte phone ki battery khatam ho jayegi 🔋",
+      "Page underground hai bhai, secret mission chal raha hai 🕵️",
+      "Bhai, itna effort padhai mein lagaya hota toh topper hota 😂",
+      "Page ka last seen bhi nahi aa raha bhai 👻",
+      "Internet se poochha, usne bhi haath khade kar diye 🤷",
+      "Bhai, page ne tujhe block kar diya lagta hai 🚫",
+      "Ek kaam kar, page ko WhatsApp pe message kar 📱",
+      "Page aayega bhai, bas apni shaadi se pehle umeed mat chhodna 😂",
+      "Bhai, NASA ko bulaun? Page space mein kho gaya hai 🚀",
+      "Refresh ka button dab raha hai, par kismat nahi khul rahi 😭",
+      "Page abhi meditation kar raha hai, disturb mat kar 🧘",
+      "Bhai, itni baar toh main apna alarm bhi snooze nahi karta ⏰",
+      "404: Page missing, patience testing successfully completed 🏆",
+      "Page ki attendance short hai bhai, absent mark kar dein? 📝",
+      "Bhai, page ko ghar se bulaane ke liye mummy ko phone karein? 😂",
+      "Refresh karne se page nahi, bas teri umeedein badh rahi hain 📈",
+      "Page ne chhutti maangi thi, maine approve kar di 🏖️",
+      "Bhai, tu rukega ya refresh button ki retirement karwaun? 😂",
+      "Page itna shy hai ki saamne hi nahi aa raha 🫣",
+      "Bhai, ek baar aankhein band karke khol... nahi, page phir bhi nahi hai 😭",
+      "404 ka matlab: Four baar try kar, phir bhi zero chance 🤣",
+      "Page ko dhoondhne ke liye detective course karna padega 🔍",
+      "Bhai, refresh ki speed dekh ke Wi-Fi bhi darr gaya 📶",
+      "Page abhi apni life sort kar raha hai, thoda time de 💅",
+      "Bhai, tu click karta reh, main popcorn leke aata hoon 🍿",
+      "Page ka mood Instagram story jaisa hai, 24 ghante baad bhi nahi aayega 😂",
+      "Itni mehnat toh log ex ko wapas laane mein bhi nahi karte 💀",
+      "Bhai, page ko invitation bhej diya hai, response pending hai 💌",
+      "Refresh button soch raha hai: meri kya galti hai bhai? 😭",
+      "Page ka location off hai bhai, track nahi ho raha 📍",
+      "Bhai, page hide and seek khel raha hai, aur tu haar raha hai 😂",
+      "Aaj page ka Monday hai, isliye kaam nahi karega ☕",
+      "Page ko neend aa rahi hai, tu bhi so ja bhai 😴",
+      "Bhai, ek baar refresh aur maar... bas tradition ke liye 🤣",
+      "Page ki salary pending hai, kaam karne se mana kar diya 💸",
+      "Bhai, itna refresh mat kar, page ko chakkar aa jayenge 😵‍💫",
+      "Page ne resignation de diya hai, replacement dhoondh rahe hain 📄",
+      "Bhai, tera dedication dekh ke 404 bhi emotional ho gaya 🥹",
+      "Page abhi loading ki duniya mein tapasya kar raha hai 🙏",
+      "Refresh karne se pehle page ko good morning bolna chahiye tha 🌞",
+      "Bhai, page ki train chhoot gayi, agle station pe milega 🚂",
+      "Page ko dhoondhte dhoondhte tu developer ban jayega 😂",
+      "Bhai, yeh page nahi mila, par entertainment free mein mil raha hai 🎭",
+      "Page ka rishta aaya tha, par server walon ne mana kar diya 💍",
+      "Bhai, page ka GPS bhi 'recalculating' bol raha hai 🗺️",
+      "Refresh button keh raha hai: bhai, meri bhi koi izzat hai 😤",
+      "Page ko viral fever hai, online nahi aa payega 🤒",
+      "Bhai, 404 dekh ke bhi hope? Tu toh motivational speaker hai 🫡",
+      "Page ne bola: mujhe space chahiye... internet wali space 🚀",
+      "Bhai, page ko dhoondhne ka budget khatam ho gaya 💸",
+      "Itna click karega toh button tujhe friend request bhej dega 😂",
+      "Page abhi traffic mein phansa hai, thoda wait kar 🚗",
+      "Bhai, yeh page nahi, tera patience test ka final round hai 🧠",
+      "Chal bhai, aaj ke liye itna kaafi hai... kal phir beizzati karenge 😂"
+    ];
+
+    const ghostMessages = [
+      "Abhi tak yahi hai, bhai? 😂",
+      "Bhai, page mila ya yahin ghar basa liya? 👻",
+      "Main ghost hoon, phir bhi tujhse pehle aa gaya! 🤣",
+      "Kitni der aur, bhai? Chai thandi ho gayi ☕",
+      "Page dhoondh raha hai ya time pass kar raha hai? 😂",
+      "Bhai, main bhi tere saath wait kar raha hoon 👀",
+      "404 ko apna permanent address mat bana lena 🏠",
+      "Ek hint doon? Page mujhse bhi nahi mil raha 🤡",
+      "Bhai, ab tak toh page ko yaad aa jaana chahiye tha 😭",
+      "Tu abhi bhi yahin hai? Dedication ko salaam 🫡",
+      "Ghost aaya, page nahi aaya. Kya scene hai! 👻",
+      "Bhai, refresh karte karte record bana dega kya? 🏆",
+      "Main toh bhoot hoon, tu kya kar raha hai yahan? 😂",
+      "Page ke intezaar mein chai ka doosra cup ho jaaye? ☕",
+      "Bhai, page ko tera intezaar nahi hai shayad 💀",
+      "Abhi tak page nahi mila? Plot twist: main bhi lost hoon 🗺️",
+      "Bhai, ghar nahi jaana kya? 😂",
+      "Main phir aa gaya! Page ko bhi bula loon? 👻",
+      "Itna wait toh food delivery mein bhi nahi karte 🍕",
+      "Bhai, bas kar! 404 se dosti ho gayi kya? 🤝"
+    ];
+
+    let lastMessageIndex = -1;
+    let lastGhostMessageIndex = -1;
+    let clickCount = 0;
+    let ghostHideTimeout;
+
+    // Main Refresh button: hide the instruction and show a funny message.
+    refreshButton.addEventListener("click", function () {
+      refreshInstruction.classList.add("hidden");
+
+      let randomIndex;
+
+      do {
+        randomIndex = Math.floor(Math.random() * messages.length);
+      } while (
+        messages.length > 1 &&
+        randomIndex === lastMessageIndex
+      );
+
+      lastMessageIndex = randomIndex;
+      clickCount++;
+
+      funnyMessage.classList.remove("visible");
+      funnyMessage.textContent = messages[randomIndex];
+      messageCount.textContent = "TRY #" + clickCount;
+      messageCount.classList.add("visible");
+
+      requestAnimationFrame(function () {
+        funnyMessage.classList.add("visible");
+      });
+    });
+
+    // Show a ghost message at a random interval between 10 and 15 seconds.
+    function scheduleGhost() {
+      const delay = 20000 + Math.random() * 5000;
+
+      setTimeout(function () {
+        showGhost();
+      }, delay);
+    }
+
+    function showGhost() {
+      let randomIndex;
+
+      do {
+        randomIndex = Math.floor(Math.random() * ghostMessages.length);
+      } while (
+        ghostMessages.length > 1 &&
+        randomIndex === lastGhostMessageIndex
+      );
+
+      lastGhostMessageIndex = randomIndex;
+      ghostMessage.textContent = ghostMessages[randomIndex];
+
+      ghostNotification.classList.add("show");
+
+      clearTimeout(ghostHideTimeout);
+
+      // Keep the ghost visible for about 4 seconds.
+
+      ghostHideTimeout = setTimeout(function () {
+        ghostNotification.classList.remove("show");
+      }, 5500);
+
+      // Schedule the next appearance.
+      scheduleGhost();
+    }
+
+    // Start the ghost appearances after the page loads.
+    scheduleGhost();
+  </script>
+</body>
+</html>

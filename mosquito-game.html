@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="A fun interactive electric mosquito racket game.">
+  <title>Electric Mosquito Racket</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    html {
+      min-height: 100%;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #fff;
+      color: #20211e;
+      font-family: Arial, Helvetica, sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+
+    button { -webkit-tap-highlight-color: transparent; }
+
+    .app {
+      width: 100%;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 24px;
+      border-bottom: 1px solid #eee;
+      flex-shrink: 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      white-space: nowrap;
+    }
+
+    .brand-icon {
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      flex-shrink: 0;
+      border-radius: 10px;
+      background: #f1ebff;
+      font-size: 21px;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #77776f;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      flex-shrink: 0;
+      border-radius: 50%;
+      background: #aaa99f;
+    }
+
+    .status.on .status-dot {
+      background: #20b66b;
+      box-shadow: 0 0 10px #20b66b88;
+    }
+
+    /* Icon-only sound button */
+    .sound-button {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 42px;
+      height: 42px;
+      flex-shrink: 0;
+      padding: 0;
+      border: 1px solid #e9e7ee;
+      border-radius: 11px;
+      background: #fff;
+      color: #77776f;
+      cursor: pointer;
+      transition: background .2s ease, border-color .2s ease;
+    }
+
+    .sound-button.enabled {
+      background: #f3efff;
+      border-color: #c9b9fa;
+      color: #6247ad;
+    }
+
+    .sound-button:hover {
+      background: #eee7ff;
+    }
+
+    .sound-icon {
+      display: block;
+      width: 23px;
+      height: 23px;
+    }
+
+    .sound-off-mark {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background: #e5484d;
+      color: white;
+      font-size: 12px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .sound-button:not(.enabled) .sound-off-mark {
+      display: flex;
+    }
+
+    .sound-button:focus-visible,
+    .switch:focus-visible,
+    .reset-button:focus-visible {
+      outline: 2px solid #9b80ef;
+      outline-offset: 4px;
+    }
+
+    .game-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      padding: 24px;
+    }
+
+    .dashboard {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-shrink: 0;
+    }
+
+    .score-label {
+      margin: 0 0 5px;
+      color: #77776f;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+    }
+
+    .score {
+      display: flex;
+      align-items: baseline;
+      gap: 9px;
+    }
+
+    .score-number {
+      font-size: clamp(32px, 5vw, 46px);
+      line-height: 1;
+      font-weight: 800;
+      letter-spacing: -2px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .score-caption {
+      color: #77776f;
+      font-size: 13px;
+    }
+
+    .power-control {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 13px;
+      border: 1px solid #e9e7ee;
+      border-radius: 12px;
+      background: #fff;
+      flex-shrink: 0;
+    }
+
+    .power-label {
+      display: block;
+      margin-bottom: 4px;
+      color: #88877f;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 1px;
+    }
+
+    .power-state {
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .power-state.on { color: #18a65c; }
+    .power-state.off { color: #77776f; }
+
+    .switch {
+      position: relative;
+      width: 48px;
+      height: 28px;
+      padding: 0;
+      border: 0;
+      border-radius: 30px;
+      background: #d9d9d9;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background .2s ease;
+    }
+
+    .switch[aria-checked="true"] { background: #9b80ef; }
+
+    .switch-knob {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 1px 4px #00000022;
+      transition: transform .2s ease;
+    }
+
+    .switch[aria-checked="true"] .switch-knob {
+      transform: translateX(20px);
+    }
+
+    .arena {
+      position: relative;
+      flex: 1;
+      min-height: 300px;
+      overflow: hidden;
+      border: 1px solid #eeebf5;
+      border-radius: 18px;
+      background: radial-gradient(ellipse at 50% 45%, #f8f5ff 0%, #fff 68%);
+      touch-action: none;
+      cursor: crosshair;
+    }
+
+    .arena::before {
+      position: absolute;
+      inset: 0;
+      content: "";
+      pointer-events: none;
+      opacity: .45;
+      background-image: radial-gradient(#d9d2ec .7px, transparent .7px);
+      background-size: 24px 24px;
+    }
+
+    .arena-hint {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      z-index: 2;
+      color: #a09da9;
+      font-size: 11px;
+      font-weight: 700;
+      pointer-events: none;
+    }
+
+    .mosquito {
+      position: absolute;
+      z-index: 3;
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      font-size: 27px;
+      line-height: 1;
+      pointer-events: none;
+      will-change: left, top, transform;
+      filter: drop-shadow(0 2px 2px #00000012);
+    }
+
+    .mosquito.dead { animation: zap .28s ease-out forwards; }
+
+    @keyframes zap {
+      0% { opacity: 1; transform: scale(1) rotate(0); }
+      35% { opacity: 1; transform: scale(1.5) rotate(30deg); }
+      100% { opacity: 0; transform: scale(.1) rotate(120deg); }
+    }
+
+    .racket {
+      position: absolute;
+      z-index: 5;
+      left: 50%;
+      top: 55%;
+      width: 100px;
+      height: 185px;
+      transform: translate(-50%, -20%) rotate(-25deg);
+      transform-origin: 50% 30%;
+      cursor: grab;
+      touch-action: none;
+      will-change: left, top;
+    }
+
+    .racket.dragging { cursor: grabbing; }
+
+    .racket-head {
+      position: absolute;
+      top: 0;
+      left: 4px;
+      width: 92px;
+      height: 108px;
+      overflow: hidden;
+      border: 5px solid #33313c;
+      border-radius: 48% 48% 43% 43%;
+      background: #f6f2ff;
+      box-shadow: 0 5px 12px #26203318;
+    }
+
+    .racket-head::before {
+      position: absolute;
+      inset: 5px;
+      content: "";
+      border: 2px solid #c7b8f5;
+      border-radius: 45%;
+    }
+
+    .mesh {
+      position: absolute;
+      inset: 9px;
+      border-radius: 43%;
+      background:
+        repeating-linear-gradient(0deg, transparent 0, transparent 7px, #b6a1ee 8px, transparent 9px),
+        repeating-linear-gradient(90deg, transparent 0, transparent 7px, #b6a1ee 8px, transparent 9px);
+    }
+
+    .racket-handle {
+      position: absolute;
+      top: 99px;
+      left: 38px;
+      width: 25px;
+      height: 69px;
+      border: 3px solid #34313c;
+      border-radius: 5px 5px 10px 10px;
+      background: linear-gradient(90deg, #8e72df, #b9a4ff, #8e72df);
+      box-shadow: 0 4px 7px #26203318;
+    }
+
+    .racket-grip {
+      position: absolute;
+      bottom: 0;
+      left: 36px;
+      width: 29px;
+      height: 23px;
+      border: 3px solid #34313c;
+      border-radius: 5px 5px 10px 10px;
+      background: #5f4b9f;
+    }
+
+    .racket-light {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #aaa99f;
+    }
+
+    .racket.powered .racket-light {
+      background: #27e987;
+      box-shadow: 0 0 8px 3px #27e98788;
+    }
+
+    .racket.powered .racket-head {
+      box-shadow: 0 0 0 3px #a58af833, 0 0 25px #9b80ef55, 0 5px 12px #26203318;
+    }
+
+    .electric-flash {
+      position: absolute;
+      inset: -10px;
+      display: none;
+      border: 3px solid #a58af8;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .racket.powered .electric-flash {
+      display: block;
+      animation: electric-pulse 1.2s ease-in-out infinite;
+    }
+
+    @keyframes electric-pulse {
+      0%, 100% { opacity: .25; transform: scale(.96); }
+      50% { opacity: .8; transform: scale(1.04); }
+    }
+
+    .zap-effect {
+      position: absolute;
+      z-index: 8;
+      pointer-events: none;
+      color: #9b80ef;
+      font-size: 30px;
+      font-weight: 900;
+      animation: zap-text .45s ease-out forwards;
+    }
+
+    @keyframes zap-text {
+      from { opacity: 1; transform: translateY(0) scale(.7); }
+      to { opacity: 0; transform: translateY(-28px) scale(1.3); }
+    }
+
+    .bottom-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-top: 17px;
+      color: #8a8982;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+
+    .instructions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .reset-button {
+      padding: 9px 13px;
+      border: 1px solid #e9e7ee;
+      border-radius: 8px;
+      background: #fff;
+      color: #55564f;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: background .2s ease;
+    }
+
+    .reset-button:hover { background: #f7f5fc; }
+
+    @media (max-width: 600px) {
+      .topbar { padding: 12px 14px; }
+      .topbar-right { gap: 9px; }
+      .sound-button { width: 40px; height: 40px; }
+
+      .game-area {
+        flex: none;
+        padding: 14px 12px 18px;
+      }
+
+      .dashboard {
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .score-label {
+        max-width: 155px;
+        font-size: 10px;
+        letter-spacing: .7px;
+      }
+
+      .score-number { font-size: 36px; }
+
+      .power-control {
+        gap: 8px;
+        padding: 8px;
+      }
+
+      .power-label {
+        font-size: 9px;
+        letter-spacing: .5px;
+      }
+
+      .arena {
+        flex: none;
+        height: clamp(300px, 48dvh, 460px);
+        min-height: 300px;
+        border-radius: 14px;
+      }
+
+      .arena-hint {
+        top: 12px;
+        left: 10px;
+        font-size: 9px;
+      }
+
+      .bottom-bar {
+        align-items: center;
+        gap: 10px;
+        padding-top: 14px;
+      }
+
+      .instructions {
+        flex: 1;
+        align-items: flex-start;
+        gap: 6px;
+        font-size: 11px;
+        line-height: 1.5;
+      }
+
+      .reset-button {
+        padding: 9px 10px;
+        font-size: 11px;
+      }
+
+      .racket {
+        transform: translate(-50%, -20%) rotate(-25deg) scale(.88);
+      }
+    }
+
+    @media (max-width: 360px) {
+      .brand { font-size: 12px; gap: 6px; }
+      .brand-icon { width: 30px; height: 30px; }
+      .status { font-size: 10px; gap: 5px; }
+      .score-number { font-size: 32px; }
+      .power-control { gap: 6px; padding: 7px; }
+      .switch { width: 42px; }
+      .switch[aria-checked="true"] .switch-knob {
+        transform: translateX(14px);
+      }
+      .instructions { font-size: 10px; }
+      .reset-button { padding: 8px; }
+      .sound-button { width: 38px; height: 38px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-icon" aria-hidden="true">⚡</div>
+        <span>RACKET ARENA</span>
+      </div>
+
+      <div class="topbar-right">
+        <button
+          class="sound-button enabled"
+          id="soundButton"
+          type="button"
+          aria-pressed="true"
+          aria-label="Turn sound off"
+          title="Turn sound off"
+        >
+          <!-- Speaker icon only; no sound ON/OFF text -->
+          <svg
+            class="sound-icon"
+            id="soundIcon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M11 5 6 9H2v6h4l5 4z"></path>
+            <path d="M15.5 8.5a5 5 0 0 1 0 7"></path>
+            <path d="M19 5a10 10 0 0 1 0 14"></path>
+          </svg>
+          <span class="sound-off-mark" id="soundOffMark" aria-hidden="true">×</span>
+        </button>
+
+        <div class="status" id="status">
+          <span class="status-dot"></span>
+          <span id="statusText">POWER OFF</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="game-area">
+      <section class="dashboard">
+        <div>
+          <p class="score-label">Mosquitoes eliminated</p>
+          <div class="score">
+            <span class="score-number" id="score">0</span>
+            <span class="score-caption">total</span>
+          </div>
+        </div>
+
+        <div class="power-control">
+          <div>
+            <span class="power-label">ELECTRIC RACKET</span>
+            <span class="power-state off" id="powerState">OFF</span>
+          </div>
+
+          <button
+            class="switch"
+            id="powerSwitch"
+            type="button"
+            role="switch"
+            aria-checked="false"
+            aria-label="Turn electric racket on or off"
+          >
+            <span class="switch-knob"></span>
+          </button>
+        </div>
+      </section>
+
+      <section class="arena" id="arena" aria-label="Mosquito game area">
+        <div class="arena-hint">DRAG THE RACKET TO CHASE MOSQUITOES</div>
+
+        <div class="racket" id="racket" aria-label="Draggable electric racket">
+          <div class="racket-head">
+            <div class="mesh"></div>
+            <div class="racket-light"></div>
+            <div class="electric-flash"></div>
+          </div>
+          <div class="racket-handle"></div>
+          <div class="racket-grip"></div>
+        </div>
+      </section>
+
+      <footer class="bottom-bar">
+        <div class="instructions">
+          <span aria-hidden="true">☝️</span>
+          <span>Drag the racket around. Turn power ON to eliminate mosquitoes.</span>
+        </div>
+
+        <button class="reset-button" id="resetButton" type="button">
+          Reset score
+        </button>
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    const arena = document.getElementById("arena");
+    const racket = document.getElementById("racket");
+    const powerSwitch = document.getElementById("powerSwitch");
+    const powerState = document.getElementById("powerState");
+    const status = document.getElementById("status");
+    const statusText = document.getElementById("statusText");
+    const scoreElement = document.getElementById("score");
+    const resetButton = document.getElementById("resetButton");
+    const soundButton = document.getElementById("soundButton");
+    const soundIcon = document.getElementById("soundIcon");
+
+    const MOSQUITO_COUNT = 12;
+    const MOSQUITO_EMOJI = "🦟";
+    const COLLISION_RADIUS = 51;
+
+    let powered = false;
+    let soundEnabled = true;
+    let audioContext = null;
+    let score = 0;
+    let dragging = false;
+    let racketX = 0;
+    let racketY = 0;
+    let dragOffsetX = 0;
+    let dragOffsetY = 0;
+    let lastFrame = 0;
+    let mosquitoes = [];
+    let nextId = 0;
+    let nextBuzzTime = 0;
+
+    function random(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    function getAudioContext() {
+      if (!soundEnabled) return null;
+
+      if (!audioContext) {
+        const AudioContextClass =
+          window.AudioContext || window.webkitAudioContext;
+
+        if (!AudioContextClass) return null;
+
+        audioContext = new AudioContextClass();
+      }
+
+      return audioContext;
+    }
+
+    async function unlockAudio() {
+      const ctx = getAudioContext();
+      if (!ctx) return;
+
+      try {
+        if (ctx.state === "suspended") {
+          await ctx.resume();
+        }
+      } catch (error) {
+        // Browser audio may require another user interaction.
+      }
+    }
+
+    function playTone(
+      frequency,
+      duration,
+      type = "sine",
+      volume = 0.025
+    ) {
+      const ctx = getAudioContext();
+      if (!ctx || ctx.state !== "running") return;
+
+      const oscillator = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const now = ctx.currentTime;
+
+      oscillator.type = type;
+      oscillator.frequency.setValueAtTime(frequency, now);
+
+      gain.gain.setValueAtTime(Math.max(volume, 0.001), now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+      oscillator.connect(gain);
+      gain.connect(ctx.destination);
+
+      oscillator.start(now);
+      oscillator.stop(now + duration);
+    }
+
+    // A short click/beep when switching the racket on or off.
+    function playPowerSound(isOn) {
+      if (!soundEnabled) return;
+
+      if (isOn) {
+        playTone(620, 0.07, "square", 0.018);
+
+        setTimeout(() => {
+          if (soundEnabled) {
+            playTone(900, 0.06, "sine", 0.018);
+          }
+        }, 65);
+      } else {
+        playTone(380, 0.08, "sine", 0.02);
+      }
+    }
+
+    // A brief electric crack when the racket hits a mosquito.
+    function playZapSound() {
+      const ctx = getAudioContext();
+
+      if (!ctx || ctx.state !== "running" || !soundEnabled) return;
+
+      const now = ctx.currentTime;
+      const duration = 0.11;
+      const bufferSize = Math.floor(ctx.sampleRate * duration);
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1) *
+          Math.pow(1 - i / bufferSize, 2);
+      }
+
+      const noise = ctx.createBufferSource();
+      const filter = ctx.createBiquadFilter();
+      const gain = ctx.createGain();
+
+      noise.buffer = buffer;
+      filter.type = "highpass";
+      filter.frequency.value = 1100;
+
+      gain.gain.setValueAtTime(0.13, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+
+      noise.start(now);
+      noise.stop(now + duration);
+
+      playTone(1750, 0.045, "square", 0.018);
+    }
+
+    // Occasional short, high-pitched mosquito buzz.
+    function playMosquitoBuzz() {
+      if (!soundEnabled) return;
+
+      playTone(480, 0.065, "sawtooth", 0.004);
+    }
+
+    function updateSoundButton() {
+      soundButton.classList.toggle("enabled", soundEnabled);
+      soundButton.setAttribute("aria-pressed", String(soundEnabled));
+
+      if (soundEnabled) {
+        // Speaker with sound waves.
+        soundIcon.innerHTML = `
+          <path d="M11 5 6 9H2v6h4l5 4z"></path>
+          <path d="M15.5 8.5a5 5 0 0 1 0 7"></path>
+          <path d="M19 5a10 10 0 0 1 0 14"></path>
+        `;
+
+        soundButton.setAttribute("aria-label", "Turn sound off");
+        soundButton.title = "Turn sound off";
+      } else {
+        // Speaker with a cross: icon only, no text.
+        soundIcon.innerHTML = `
+          <path d="M11 5 6 9H2v6h4l5 4z"></path>
+          <path d="m17 9 5 6"></path>
+          <path d="m22 9-5 6"></path>
+        `;
+
+        soundButton.setAttribute("aria-label", "Turn sound on");
+        soundButton.title = "Turn sound on";
+      }
+    }
+
+    soundButton.addEventListener("click", async () => {
+      soundEnabled = !soundEnabled;
+      updateSoundButton();
+
+      if (soundEnabled) {
+        await unlockAudio();
+        playTone(700, 0.06, "sine", 0.02);
+        nextBuzzTime = performance.now() + 1000;
+      } else if (audioContext && audioContext.state === "running") {
+        try {
+          await audioContext.suspend();
+        } catch (error) {
+          // Ignore unsupported audio suspension.
+        }
+      }
+    });
+
+    function getArenaSize() {
+      return {
+        width: arena.clientWidth,
+        height: arena.clientHeight
+      };
+    }
+
+    function clampRacket(x, y) {
+      const size = getArenaSize();
+
+      racketX = Math.max(48, Math.min(size.width - 48, x));
+      racketY = Math.max(65, Math.min(size.height - 55, y));
+
+      racket.style.left = racketX + "px";
+      racket.style.top = racketY + "px";
+    }
+
+    function createMosquito() {
+      const size = getArenaSize();
+      const element = document.createElement("div");
+
+      element.className = "mosquito";
+      element.textContent = MOSQUITO_EMOJI;
+      element.setAttribute("aria-hidden", "true");
+
+      const mosquito = {
+        id: nextId++,
+        element,
+        x: random(25, Math.max(26, size.width - 25)),
+        y: random(65, Math.max(66, size.height - 25)),
+        vx: random(-75, 75),
+        vy: random(-65, 65),
+        turnTimer: random(0.5, 2.5),
+        dead: false
+      };
+
+      arena.appendChild(element);
+      mosquitoes.push(mosquito);
+      positionMosquito(mosquito);
+
+      return mosquito;
+    }
+
+    function positionMosquito(mosquito) {
+      mosquito.element.style.left = mosquito.x + "px";
+      mosquito.element.style.top = mosquito.y + "px";
+      mosquito.element.style.transform =
+        `translate(-50%, -50%) scaleX(${mosquito.vx < 0 ? -1 : 1})`;
+    }
+
+    function spawnInitialMosquitoes() {
+      mosquitoes.forEach(m => m.element.remove());
+      mosquitoes = [];
+
+      for (let i = 0; i < MOSQUITO_COUNT; i++) {
+        createMosquito();
+      }
+    }
+
+    function setPower(isOn) {
+      powered = isOn;
+
+      powerSwitch.setAttribute("aria-checked", String(powered));
+      powerState.textContent = powered ? "ON" : "OFF";
+      powerState.classList.toggle("on", powered);
+      powerState.classList.toggle("off", !powered);
+
+      status.classList.toggle("on", powered);
+      statusText.textContent = powered ? "POWER ON" : "POWER OFF";
+
+      racket.classList.toggle("powered", powered);
+    }
+
+    powerSwitch.addEventListener("click", async () => {
+      const nextPower = !powered;
+
+      if (soundEnabled) {
+        await unlockAudio();
+      }
+
+      setPower(nextPower);
+
+      if (soundEnabled) {
+        playPowerSound(nextPower);
+      }
+    });
+
+    function makeZapEffect(x, y) {
+      const effect = document.createElement("div");
+
+      effect.className = "zap-effect";
+      effect.textContent = "✦";
+      effect.style.left = x + "px";
+      effect.style.top = y + "px";
+
+      arena.appendChild(effect);
+      setTimeout(() => effect.remove(), 500);
+    }
+
+    function eliminateMosquito(mosquito) {
+      if (mosquito.dead) return;
+
+      mosquito.dead = true;
+      score++;
+      scoreElement.textContent = score;
+      mosquito.element.classList.add("dead");
+
+      makeZapEffect(mosquito.x, mosquito.y);
+      playZapSound();
+
+      setTimeout(() => {
+        mosquito.element.remove();
+
+        const index = mosquitoes.indexOf(mosquito);
+        if (index !== -1) mosquitoes.splice(index, 1);
+
+        createMosquito();
+      }, 280);
+    }
+
+    function checkCollisions() {
+      if (!powered) return;
+
+      for (const mosquito of mosquitoes) {
+        if (mosquito.dead) continue;
+
+        const dx = mosquito.x - racketX;
+        const dy = mosquito.y - racketY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance < COLLISION_RADIUS) {
+          eliminateMosquito(mosquito);
+        }
+      }
+    }
+
+    function animateMosquitoes(timestamp) {
+      const delta = lastFrame
+        ? Math.min((timestamp - lastFrame) / 1000, 0.04)
+        : 0;
+
+      lastFrame = timestamp;
+      const size = getArenaSize();
+
+      if (
+        soundEnabled &&
+        timestamp >= nextBuzzTime &&
+        mosquitoes.length > 0
+      ) {
+        playMosquitoBuzz();
+        nextBuzzTime = timestamp + random(2200, 4200);
+      }
+
+      for (const mosquito of mosquitoes) {
+        if (mosquito.dead) continue;
+
+        mosquito.turnTimer -= delta;
+
+        if (mosquito.turnTimer <= 0) {
+          mosquito.vx += random(-65, 65);
+          mosquito.vy += random(-65, 65);
+
+          mosquito.vx = Math.max(-100, Math.min(100, mosquito.vx));
+          mosquito.vy = Math.max(-90, Math.min(90, mosquito.vy));
+
+          mosquito.turnTimer = random(0.6, 2);
+        }
+
+        mosquito.x += mosquito.vx * delta;
+        mosquito.y += mosquito.vy * delta;
+
+        if (mosquito.x < 20) {
+          mosquito.x = 20;
+          mosquito.vx = Math.abs(mosquito.vx);
+        }
+
+        if (mosquito.x > size.width - 20) {
+          mosquito.x = size.width - 20;
+          mosquito.vx = -Math.abs(mosquito.vx);
+        }
+
+        if (mosquito.y < 55) {
+          mosquito.y = 55;
+          mosquito.vy = Math.abs(mosquito.vy);
+        }
+
+        if (mosquito.y > size.height - 20) {
+          mosquito.y = size.height - 20;
+          mosquito.vy = -Math.abs(mosquito.vy);
+        }
+
+        positionMosquito(mosquito);
+      }
+
+      checkCollisions();
+      requestAnimationFrame(animateMosquitoes);
+    }
+
+    racket.addEventListener("pointerdown", async event => {
+      event.preventDefault();
+
+      if (soundEnabled) {
+        await unlockAudio();
+      }
+
+      dragging = true;
+      racket.classList.add("dragging");
+      racket.setPointerCapture(event.pointerId);
+
+      const rect = arena.getBoundingClientRect();
+      dragOffsetX = event.clientX - rect.left - racketX;
+      dragOffsetY = event.clientY - rect.top - racketY;
+    });
+
+    racket.addEventListener("pointermove", event => {
+      if (!dragging) return;
+
+      event.preventDefault();
+
+      const rect = arena.getBoundingClientRect();
+
+      clampRacket(
+        event.clientX - rect.left - dragOffsetX,
+        event.clientY - rect.top - dragOffsetY
+      );
+
+      checkCollisions();
+    });
+
+    function stopDragging() {
+      dragging = false;
+      racket.classList.remove("dragging");
+    }
+
+    racket.addEventListener("pointerup", stopDragging);
+    racket.addEventListener("pointercancel", stopDragging);
+    racket.addEventListener("lostpointercapture", stopDragging);
+
+    resetButton.addEventListener("click", () => {
+      score = 0;
+      scoreElement.textContent = score;
+      spawnInitialMosquitoes();
+    });
+
+    window.addEventListener("resize", () => {
+      const size = getArenaSize();
+
+      clampRacket(
+        racketX || size.width / 2,
+        racketY || size.height / 2
+      );
+
+      for (const mosquito of mosquitoes) {
+        mosquito.x = Math.max(20, Math.min(size.width - 20, mosquito.x));
+        mosquito.y = Math.max(55, Math.min(size.height - 20, mosquito.y));
+        positionMosquito(mosquito);
+      }
+    });
+
+    function initialize() {
+      const size = getArenaSize();
+
+      clampRacket(size.width / 2, size.height * 0.58);
+      spawnInitialMosquitoes();
+      updateSoundButton();
+
+      nextBuzzTime = performance.now() + 1500;
+      requestAnimationFrame(animateMosquitoes);
+    }
+
+    initialize();
+  </script>
+</body>
+</html>

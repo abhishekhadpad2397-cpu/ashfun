@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Two eyes are watching. An unusual interactive experience by ASHFUN.">
+<title>The Watcher — ASHFUN</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: #fff;
+    font-family: Arial, sans-serif;
+    cursor: default;
+    color: #20211e;
+}
+
+/* HEADER */
+
+.top {
+    position: absolute;
+    z-index: 10;
+    top: 25px;
+    left: 30px;
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    color: #111;
+    text-decoration: none;
+}
+
+/* EYE STAGE */
+
+.stage {
+    position: relative;
+    width: 100%;
+    height: 100svh;
+    min-height: 430px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+/* EYE CONTAINER */
+
+.eyes {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    transform: scale(0.08);
+    animation: appear 5s cubic-bezier(.2,.8,.2,1) forwards;
+    transform-origin: center;
+}
+
+/* INITIAL APPEARANCE */
+
+@keyframes appear {
+    0% {
+        transform: scale(0.08);
+        opacity: 0;
+    }
+
+    20% {
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* WHITE PART OF THE EYE */
+
+.eye {
+    position: relative;
+    width: 150px;
+    height: 105px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+
+    border: 3px solid #d8d5ed;
+    border-radius: 50%;
+
+    background: radial-gradient(
+        ellipse at 50% 45%,
+        #ffffff 0%,
+        #f0eff8 70%,
+        #d6d3e7 100%
+    );
+
+    box-shadow:
+        0 0 18px #b7b1ff55,
+        0 7px 18px #00000045;
+}
+
+/* IRIS */
+
+.iris {
+    position: relative;
+    width: 57px;
+    height: 57px;
+    flex-shrink: 0;
+
+    border: 3px solid #172b3a;
+    border-radius: 50%;
+
+    background: repeating-conic-gradient(
+        from 0deg,
+        #6f9eae 0deg 8deg,
+        #355c72 8deg 15deg
+    );
+
+    box-shadow:
+        inset 0 0 0 5px #294e68,
+        0 0 12px #7cb7d966;
+}
+
+/* PUPIL */
+
+.iris::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 29px;
+    height: 29px;
+
+    border-radius: 50%;
+    background: radial-gradient(
+        circle,
+        #000000 0%,
+        #050505 70%,
+        #222222 100%
+    );
+
+    transform: translate(-50%, -50%);
+}
+
+/* LIGHT REFLECTION */
+
+.iris::before {
+    content: "";
+    position: absolute;
+    z-index: 2;
+    top: 8px;
+    left: 9px;
+    width: 11px;
+    height: 11px;
+
+    border-radius: 50%;
+    background: #ffffff;
+
+    box-shadow: 9px 13px 0 -4px #ffffffaa;
+}
+
+/* EYELIDS */
+
+.eye::before,
+.eye::after {
+    content: "";
+    position: absolute;
+    z-index: 3;
+    left: -5%;
+    width: 110%;
+    height: 0;
+    background: #fff;
+}
+
+.eye::before {
+    top: 0;
+    border-bottom: 2px solid rgba(0,0,0,.16);
+}
+
+.eye::after {
+    bottom: 0;
+    border-top: 2px solid rgba(0,0,0,.12);
+}
+
+/* BLINKING */
+
+.eye.blink {
+    animation: blink .18s ease-in-out;
+}
+
+@keyframes blink {
+    0%, 100% {
+        height: 105px;
+    }
+
+    50% {
+        height: 3px;
+    }
+}
+
+.eye.blink .iris {
+    opacity: 0;
+}
+
+/* YOU MAY ALSO LIKE */
+
+.recommendations {
+    padding: 65px 20px 30px;
+    background: #f8f8f4;
+    border-top: 1px solid #e7e7df;
+}
+
+.recommendations-inner {
+    width: 100%;
+    max-width: 850px;
+    margin: 0 auto;
+}
+
+.section-heading {
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+.section-heading span {
+    display: block;
+    margin-bottom: 9px;
+    color: #85867c;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 2px;
+}
+
+.section-heading h2 {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    font-size: 27px;
+    font-weight: 800;
+    letter-spacing: -1px;
+}
+
+/* RECOMMENDATION GRID */
+
+.recommendation-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.recommendation-card {
+    display: block;
+    min-width: 0;
+    padding: 15px;
+    border: 1px solid #e8e6df;
+    border-radius: 10px;
+    color: #20211e;
+    text-decoration: none;
+    transition: transform .25s ease, box-shadow .25s ease;
+}
+
+.recommendation-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 30px #00000010;
+}
+
+.mosquito-card {
+    background: #d9edff;
+}
+
+.catcher-card {
+    background: #e8ddff;
+}
+
+.card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    color: #55564c;
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: 1.1px;
+}
+
+.card-arrow {
+    width: 28px;
+    height: 28px;
+    display: grid;
+    flex-shrink: 0;
+    place-items: center;
+    border: 1px solid #20211e45;
+    border-radius: 50%;
+    font-size: 15px;
+    transition: transform .2s ease, background .2s ease;
+}
+
+.recommendation-card:hover .card-arrow {
+    background: #fff;
+    transform: rotate(45deg);
+}
+
+/* MOSQUITO ART */
+
+.mosquito-art {
+    position: relative;
+    height: 145px;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+}
+
+.mosquito-icon {
+    position: absolute;
+    top: 12px;
+    left: 25%;
+    font-size: 35px;
+    transform: rotate(-18deg);
+}
+
+.mini-racket {
+    position: absolute;
+    right: 27%;
+    bottom: 5px;
+    width: 65px;
+    height: 110px;
+    transform: rotate(30deg);
+}
+
+.mini-racket-head {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 65px;
+    height: 70px;
+    border: 5px solid #29243f;
+    border-radius: 50%;
+    background:
+        repeating-linear-gradient(
+            0deg,
+            transparent 0,
+            transparent 8px,
+            #7764ef 9px,
+            #7764ef 10px
+        ),
+        repeating-linear-gradient(
+            90deg,
+            transparent 0,
+            transparent 8px,
+            #7764ef 9px,
+            #7764ef 10px
+        ),
+        #f8f7ff;
+}
+
+.mini-racket-handle {
+    position: absolute;
+    top: 65px;
+    left: 25px;
+    width: 16px;
+    height: 42px;
+    border: 2px solid #29243f;
+    border-radius: 4px 4px 8px 8px;
+    background: #8a76ff;
+}
+
+.mosquito-caption {
+    position: absolute;
+    bottom: 5px;
+    left: 5px;
+    padding: 6px 9px;
+    border-radius: 4px;
+    background: #29243f;
+    color: white;
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+}
+
+/* CATCHER ART */
+
+.catcher-art {
+    position: relative;
+    height: 145px;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+}
+
+.catcher-title {
+    position: relative;
+    z-index: 2;
+    color: #20211e;
+    font-size: 49px;
+    font-weight: 900;
+    line-height: .85;
+    letter-spacing: -4px;
+    text-align: center;
+    transform: rotate(-7deg);
+    text-shadow: 3px 3px 0 #fff;
+}
+
+.catcher-square {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border: 2px solid #20211e;
+    border-radius: 4px;
+    background: #fff;
+    box-shadow: 2px 2px 0 #20211e;
+}
+
+.square-one {
+    top: 15px;
+    left: 18%;
+    transform: rotate(15deg);
+}
+
+.square-two {
+    top: 25px;
+    right: 18%;
+    background: #d9ff69;
+    transform: rotate(-15deg);
+}
+
+.square-three {
+    bottom: 18px;
+    left: 25%;
+    background: #d9caff;
+    transform: rotate(25deg);
+}
+
+.square-four {
+    right: 25%;
+    bottom: 15px;
+    width: 16px;
+    height: 16px;
+    transform: rotate(-20deg);
+}
+
+/* CARD INFORMATION */
+
+.card-info {
+    padding: 13px 2px 2px;
+    border-top: 1px solid #20211e22;
+}
+
+.card-info h3 {
+    margin: 0 0 6px;
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: -.5px;
+}
+
+.card-info p {
+    margin: 0;
+    color: #5d5e55;
+    font-size: 10px;
+    line-height: 1.7;
+}
+
+/* EXPLORE MORE */
+
+.explore-more {
+    margin-top: 42px;
+    text-align: center;
+}
+
+.explore-more a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 13px 22px;
+    border: 1px solid #20211e;
+    border-radius: 5px;
+    background: #20211e;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-decoration: none;
+    transition: background .2s ease, color .2s ease, transform .2s ease;
+}
+
+.explore-more a:hover {
+    background: transparent;
+    color: #20211e;
+    transform: translateY(-3px);
+}
+
+.explore-more a span {
+    font-size: 16px;
+}
+
+.footer-note {
+    margin-top: 28px;
+    color: #85867c;
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+    text-align: center;
+}
+
+/* MOBILE */
+
+@media (max-width: 600px) {
+    .top {
+        top: 20px;
+        left: 20px;
+    }
+
+    .eyes {
+        gap: 12px;
+    }
+
+    .eye {
+        width: 115px;
+        height: 82px;
+    }
+
+    .iris {
+        width: 45px;
+        height: 45px;
+    }
+
+    .iris::after {
+        width: 23px;
+        height: 23px;
+    }
+
+    .iris::before {
+        top: 6px;
+        left: 7px;
+        width: 9px;
+        height: 9px;
+    }
+
+    .eye.blink {
+        animation: blink-mobile .18s ease-in-out;
+    }
+
+    @keyframes blink-mobile {
+        0%, 100% {
+            height: 82px;
+        }
+
+        50% {
+            height: 3px;
+        }
+    }
+
+    .recommendations {
+        padding: 48px 16px 25px;
+    }
+
+    .recommendation-grid {
+        gap: 12px;
+    }
+
+    .recommendation-card {
+        padding: 11px;
+    }
+
+    .card-top {
+        font-size: 7px;
+        letter-spacing: .6px;
+    }
+
+    .mosquito-art,
+    .catcher-art {
+        height: 125px;
+    }
+
+    .card-info h3 {
+        font-size: 15px;
+    }
+
+    .card-info p {
+        font-size: 9px;
+    }
+
+    .section-heading h2 {
+        font-size: 24px;
+    }
+}
+
+/* SMALL PHONES */
+
+@media (max-width: 360px) {
+    .recommendation-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .mosquito-art,
+    .catcher-art {
+        height: 140px;
+    }
+}
+
+/* REDUCED MOTION */
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+
+    .eyes {
+        animation: none;
+        transform: scale(1);
+    }
+
+    .eye.blink {
+        animation: none;
+    }
+
+    .recommendation-card,
+    .card-arrow,
+    .explore-more a {
+        transition: none;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <a href="index.html" class="top">ASHFUN.</a>
+</header>
+
+<!-- WATCHER EXPERIENCE -->
+
+<main>
+
+    <section class="stage">
+
+        <div class="eyes" id="eyes">
+
+            <div class="eye">
+                <div class="iris"></div>
+            </div>
+
+            <div class="eye">
+                <div class="iris"></div>
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- RECOMMENDED EXPERIENCES -->
+
+    <section class="recommendations">
+
+        <div class="recommendations-inner">
+
+            <div class="section-heading">
+                <span>TAKE ANOTHER DISTRACTION</span>
+                <h2>You may also like.</h2>
+            </div>
+
+            <div class="recommendation-grid">
+
+                <!-- MOSQUITO RACKET -->
+
+                <a href="mosquito-game.html" class="recommendation-card mosquito-card">
+
+                    <div class="card-top">
+                        <span>01 / MOSQUITO HUNT</span>
+                        <span class="card-arrow">↗</span>
+                    </div>
+
+                    <div class="mosquito-art">
+
+                        <div class="mosquito-icon">🦟</div>
+
+                        <div class="mini-racket">
+                            <div class="mini-racket-head"></div>
+                            <div class="mini-racket-handle"></div>
+                        </div>
+
+                        <div class="mosquito-caption">ZAP. GONE.</div>
+
+                    </div>
+
+                    <div class="card-info">
+                        <h3>Mosquito Racket</h3>
+                        <p>Switch on your racket and catch those flying pests.</p>
+                    </div>
+
+                </a>
+
+                <!-- CATCH ME IF YOU CAN -->
+
+                <a href="block-catcher.html" class="recommendation-card catcher-card">
+
+                    <div class="card-top">
+                        <span>02 / BLOCK CATCHER</span>
+                        <span class="card-arrow">↗</span>
+                    </div>
+
+                    <div class="catcher-art">
+
+                        <div class="catcher-square square-one"></div>
+                        <div class="catcher-square square-two"></div>
+                        <div class="catcher-square square-three"></div>
+                        <div class="catcher-square square-four"></div>
+
+                        <div class="catcher-title">
+                            CATCH<br>ME!
+                        </div>
+
+                    </div>
+
+                    <div class="card-info">
+                        <h3>Catch Me If You Can</h3>
+                        <p>Catch the moving blocks. They get faster and harder to catch.</p>
+                    </div>
+
+                </a>
+
+            </div>
+
+            <!-- BACK TO HOMEPAGE -->
+
+            <div class="explore-more">
+                <a href="index.html">
+                    Explore More
+                    <span>→</span>
+                </a>
+            </div>
+
+            <div class="footer-note">
+                ASHFUN ✳ MADE FOR NO PARTICULAR REASON
+            </div>
+
+        </div>
+
+    </section>
+
+</main>
+
+<script>
+const eyes = document.querySelectorAll(".eye");
+const eyesContainer = document.getElementById("eyes");
+
+let growth = 1;
+
+const reducedMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)"
+).matches;
+
+// Gradually grow the eyes.
+function growEyes() {
+
+    if (reducedMotion || growth >= 2.3) return;
+
+    growth = Math.min(growth + 0.08, 2.3);
+
+    eyesContainer.style.transform = `scale(${growth})`;
+
+    const nextGrowth = 1800 + Math.random() * 2500;
+
+    setTimeout(growEyes, nextGrowth);
+}
+
+// Random automatic blinking.
+function blinkEyes() {
+
+    if (reducedMotion) return;
+
+    const delay = 2500 + Math.random() * 2500;
+
+    setTimeout(() => {
+
+        eyes.forEach(eye => {
+            eye.classList.add("blink");
+        });
+
+        setTimeout(() => {
+
+            eyes.forEach(eye => {
+                eye.classList.remove("blink");
+            });
+
+            blinkEyes();
+
+        }, 200);
+
+    }, delay);
+}
+
+// Start after the initial appearance animation.
+if (!reducedMotion) {
+    setTimeout(growEyes, 5000);
+    setTimeout(blinkEyes, 6000);
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,483 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="An endless, increasingly chaotic block-catching game.">
+  <title>Catch Me If You Can — ASHFUN</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #fff;
+      font-family: Arial, Helvetica, sans-serif;
+      overflow: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .topbar {
+      height: 66px;
+      padding: 0 26px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #e7e7e7;
+      position: relative;
+      z-index: 10;
+      background: #fff;
+    }
+
+    .brand {
+      font-size: 19px;
+      font-weight: 900;
+      letter-spacing: 1.5px;
+    }
+
+    .brand span {
+      color: #888;
+    }
+
+    .back-link {
+      color: #777;
+      font-size: 13px;
+    }
+
+    .arena {
+      position: relative;
+      width: calc(100% - 30px);
+      height: calc(100dvh - 90px);
+      min-height: 250px;
+      margin: 12px auto;
+      overflow: hidden;
+      background: #fff;
+      touch-action: none;
+    }
+
+    .block {
+      position: absolute;
+      padding: 0;
+      border: 0;
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+      touch-action: none;
+      -webkit-tap-highlight-color: transparent;
+      outline: none;
+    }
+
+    .restart-button {
+      position: fixed;
+      right: 18px;
+      bottom: 15px;
+      z-index: 10;
+      padding: 9px 13px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background: #fff;
+      color: #555;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .restart-button:hover {
+      border-color: #999;
+      color: #111;
+    }
+
+    @media (max-width: 600px) {
+      .topbar {
+        height: 58px;
+        padding: 0 16px;
+      }
+
+      .arena {
+        width: calc(100% - 20px);
+        height: calc(100dvh - 75px);
+        margin: 8px auto;
+      }
+
+      .restart-button {
+        right: 10px;
+        bottom: 9px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="topbar">
+    <a class="brand" href="index.html">ASH<span>FUN</span></a>
+    <a class="back-link" href="index.html">Explore More →</a>
+  </header>
+
+  <main class="arena" id="arena"></main>
+
+  <button class="restart-button" id="restart-button" type="button">
+    Restart game ↻
+  </button>
+
+  <script>
+    "use strict";
+
+    const arena = document.getElementById("arena");
+    const restartButton = document.getElementById("restart-button");
+
+    let blocks = [];
+    let catches = 0;
+    let animationId = null;
+    let lastTime = 0;
+
+    // Tracks which blocks are currently being pressed on mobile.
+    const pressedPointers = new Map();
+
+    const BLOCK_SIZE = 10;
+
+    const colors = [
+      "#ff4d4d",
+      "#3273ff",
+      "#ffbd2e",
+      "#a855f7",
+      "#16a085",
+      "#ff7a30",
+      "#ec4899",
+      "#222222",
+      "#00a6a6",
+      "#8b5cf6"
+    ];
+
+    function random(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    function getDifficulty() {
+      if (catches >= 50) return 5;
+      if (catches >= 30) return 4;
+      if (catches >= 20) return 3;
+      if (catches >= 10) return 2;
+      return 1;
+    }
+
+    function getSpeed() {
+      const difficulty = getDifficulty();
+
+      if (difficulty === 1) return 2.2 + catches * 0.04;
+      if (difficulty === 2) return 4.5 + catches * 0.045;
+      if (difficulty === 3) return 5.5 + catches * 0.05;
+      if (difficulty === 4) return 6.5 + catches * 0.055;
+
+      return 8 + catches * 0.06;
+    }
+
+    function getBlockStyle() {
+      return {
+        size: BLOCK_SIZE,
+        color: catches < 10
+          ? "#111111"
+          : colors[Math.floor(Math.random() * colors.length)]
+      };
+    }
+
+    function getBounds(size) {
+      return {
+        minX: size / 2,
+        maxX: Math.max(size / 2, arena.clientWidth - size / 2),
+        minY: size / 2,
+        maxY: Math.max(size / 2, arena.clientHeight - size / 2)
+      };
+    }
+
+    function chooseDirection(block) {
+      const angle = random(0, Math.PI * 2);
+      const speed = getSpeed();
+
+      block.vx = Math.cos(angle) * speed;
+      block.vy = Math.sin(angle) * speed;
+    }
+
+    function placeBlock(block) {
+      const bounds = getBounds(block.size);
+
+      block.x = random(bounds.minX, bounds.maxX);
+      block.y = random(bounds.minY, bounds.maxY);
+
+      chooseDirection(block);
+
+      block.element.style.left = `${block.x}px`;
+      block.element.style.top = `${block.y}px`;
+
+      const now = performance.now();
+
+      block.nextDirectionChange = now + random(300, 1100);
+      block.nextJump = now + random(700, 1800);
+    }
+
+    function createBlock() {
+      const style = getBlockStyle();
+
+      const element = document.createElement("button");
+
+      element.type = "button";
+      element.className = "block";
+      element.setAttribute("aria-label", "Catch moving block");
+
+      element.style.width = `${BLOCK_SIZE}px`;
+      element.style.height = `${BLOCK_SIZE}px`;
+      element.style.backgroundColor = style.color;
+
+      element.style.borderRadius =
+        catches >= 20 && Math.random() > 0.65 ? "5px" : "1px";
+
+      element.style.zIndex = String(blocks.length + 1);
+
+      const block = {
+        element,
+        x: 0,
+        y: 0,
+        vx: 0,
+        vy: 0,
+        size: BLOCK_SIZE,
+        caught: false,
+        paused: false,
+        nextDirectionChange: 0,
+        nextJump: 0
+      };
+
+      blocks.push(block);
+      arena.appendChild(element);
+
+      placeBlock(block);
+
+      // DESKTOP: pause and catch when the mouse enters.
+      element.addEventListener("pointerenter", event => {
+        if (event.pointerType !== "mouse") return;
+
+        block.paused = true;
+
+        if (!block.caught) {
+          catchBlock(block);
+        }
+      });
+
+      // DESKTOP: resume when the mouse leaves.
+      element.addEventListener("pointerleave", event => {
+        if (event.pointerType !== "mouse") return;
+
+        block.paused = false;
+      });
+
+      return block;
+    }
+
+    // MOBILE: freeze the touched block and create the next block.
+    arena.addEventListener("pointerdown", event => {
+      if (event.pointerType === "mouse") return;
+
+      const target = event.target;
+
+      if (!(target instanceof Element)) return;
+
+      const element = target.closest(".block");
+
+      if (!element || !arena.contains(element)) return;
+
+      const block = blocks.find(item => item.element === element);
+
+      if (!block || block.caught) return;
+
+      // Freeze this block while the finger is pressed.
+      block.paused = true;
+
+      // Remember which block belongs to this finger.
+      pressedPointers.set(event.pointerId, block);
+
+      // Keep receiving pointer events even if the finger moves.
+      try {
+        element.setPointerCapture(event.pointerId);
+      } catch (error) {
+        // Window-level pointer listeners remain as a fallback.
+      }
+
+      // Catch the block and create the next one.
+      catchBlock(block);
+    });
+
+    // MOBILE: resume the touched block when the finger is lifted.
+    function releasePointer(event) {
+      const block = pressedPointers.get(event.pointerId);
+
+      if (!block) return;
+
+      block.paused = false;
+      pressedPointers.delete(event.pointerId);
+    }
+
+    window.addEventListener("pointerup", releasePointer, true);
+    window.addEventListener("pointercancel", releasePointer, true);
+
+    function catchBlock(block) {
+      if (block.caught) return;
+
+      block.caught = true;
+      catches++;
+
+      // Immediately create the next moving block.
+      createBlock();
+    }
+
+    function changeDirection(block, jump = false) {
+      chooseDirection(block);
+
+      if (jump) {
+        const bounds = getBounds(block.size);
+
+        block.x = random(bounds.minX, bounds.maxX);
+        block.y = random(bounds.minY, bounds.maxY);
+      }
+    }
+
+    function updateBlock(block, timestamp, delta) {
+
+      // Both desktop and mobile use the same pause property.
+      if (block.paused) return;
+
+      const difficulty = getDifficulty();
+      const bounds = getBounds(block.size);
+
+      const currentSpeed = Math.hypot(block.vx, block.vy);
+      const targetSpeed = getSpeed();
+
+      if (currentSpeed > 0) {
+        block.vx = (block.vx / currentSpeed) * targetSpeed;
+        block.vy = (block.vy / currentSpeed) * targetSpeed;
+      }
+
+      block.x += block.vx * delta;
+      block.y += block.vy * delta;
+
+      if (block.x <= bounds.minX || block.x >= bounds.maxX) {
+        block.vx *= -1;
+        block.x = Math.max(
+          bounds.minX,
+          Math.min(bounds.maxX, block.x)
+        );
+      }
+
+      if (block.y <= bounds.minY || block.y >= bounds.maxY) {
+        block.vy *= -1;
+        block.y = Math.max(
+          bounds.minY,
+          Math.min(bounds.maxY, block.y)
+        );
+      }
+
+      // Direction changes from 30 catches.
+      if (catches >= 30 && timestamp >= block.nextDirectionChange) {
+        changeDirection(block);
+
+        block.nextDirectionChange = timestamp +
+          random(
+            difficulty >= 5 ? 150 : 300,
+            difficulty >= 5 ? 500 : 1000
+          );
+      }
+
+      // Random jumps from 50 catches.
+      if (catches >= 50 && timestamp >= block.nextJump) {
+        if (Math.random() < 0.75) {
+          changeDirection(block, true);
+        }
+
+        block.nextJump = timestamp + random(250, 900);
+      }
+
+      // Extra chaos after 50 catches.
+      if (catches >= 50) {
+        if (Math.random() < 0.008) {
+          changeDirection(block);
+        }
+
+        if (Math.random() < 0.002) {
+          changeDirection(block, true);
+        }
+      }
+
+      block.element.style.left = `${block.x}px`;
+      block.element.style.top = `${block.y}px`;
+    }
+
+    function animate(timestamp) {
+      if (!lastTime) lastTime = timestamp;
+
+      const delta = Math.min(
+        (timestamp - lastTime) / 16.67,
+        2
+      );
+
+      lastTime = timestamp;
+
+      blocks.forEach(block => {
+        updateBlock(block, timestamp, delta);
+      });
+
+      animationId = requestAnimationFrame(animate);
+    }
+
+    function startGame() {
+      if (animationId !== null) {
+        cancelAnimationFrame(animationId);
+      }
+
+      // Clear any old pointer tracking.
+      pressedPointers.clear();
+
+      blocks.forEach(block => {
+        block.element.remove();
+      });
+
+      blocks = [];
+      catches = 0;
+      lastTime = 0;
+
+      createBlock();
+
+      animationId = requestAnimationFrame(animate);
+    }
+
+    restartButton.addEventListener("click", startGame);
+
+    window.addEventListener("resize", () => {
+      blocks.forEach(block => {
+        const bounds = getBounds(block.size);
+
+        block.x = Math.max(
+          bounds.minX,
+          Math.min(bounds.maxX, block.x)
+        );
+
+        block.y = Math.max(
+          bounds.minY,
+          Math.min(bounds.maxY, block.y)
+        );
+
+        block.element.style.left = `${block.x}px`;
+        block.element.style.top = `${block.y}px`;
+      });
+    });
+
+    startGame();
+  </script>
+
+</body>
+</html>
