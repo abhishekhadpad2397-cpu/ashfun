@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -47,6 +46,19 @@
 
     .brand span {
       color: #888;
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .score {
+      font-size: 13px;
+      font-weight: 700;
+      color: #555;
+      white-space: nowrap;
     }
 
     .back-link {
@@ -101,6 +113,18 @@
         padding: 0 16px;
       }
 
+      .topbar-left {
+        gap: 12px;
+      }
+
+      .score {
+        font-size: 12px;
+      }
+
+      .back-link {
+        font-size: 11px;
+      }
+
       .arena {
         width: calc(100% - 20px);
         height: calc(100dvh - 75px);
@@ -118,7 +142,11 @@
 <body>
 
   <header class="topbar">
-    <a class="brand" href="index.html">ASH<span>FUN</span></a>
+    <div class="topbar-left">
+      <a class="brand" href="index.html">ASH<span>FUN</span></a>
+      <div class="score" id="score">Caught: 0</div>
+    </div>
+
     <a class="back-link" href="index.html">Explore More →</a>
   </header>
 
@@ -133,13 +161,13 @@
 
     const arena = document.getElementById("arena");
     const restartButton = document.getElementById("restart-button");
+    const scoreDisplay = document.getElementById("score");
 
     let blocks = [];
     let catches = 0;
     let animationId = null;
     let lastTime = 0;
 
-    // Tracks which blocks are currently being pressed on mobile.
     const pressedPointers = new Map();
 
     const BLOCK_SIZE = 10;
@@ -159,6 +187,10 @@
 
     function random(min, max) {
       return Math.random() * (max - min) + min;
+    }
+
+    function updateScore() {
+      scoreDisplay.textContent = `Caught: ${catches}`;
     }
 
     function getDifficulty() {
@@ -259,7 +291,6 @@
 
       placeBlock(block);
 
-      // DESKTOP: pause and catch when the mouse enters.
       element.addEventListener("pointerenter", event => {
         if (event.pointerType !== "mouse") return;
 
@@ -270,7 +301,6 @@
         }
       });
 
-      // DESKTOP: resume when the mouse leaves.
       element.addEventListener("pointerleave", event => {
         if (event.pointerType !== "mouse") return;
 
@@ -280,7 +310,6 @@
       return block;
     }
 
-    // MOBILE: freeze the touched block and create the next block.
     arena.addEventListener("pointerdown", event => {
       if (event.pointerType === "mouse") return;
 
@@ -296,24 +325,19 @@
 
       if (!block || block.caught) return;
 
-      // Freeze this block while the finger is pressed.
       block.paused = true;
 
-      // Remember which block belongs to this finger.
       pressedPointers.set(event.pointerId, block);
 
-      // Keep receiving pointer events even if the finger moves.
       try {
         element.setPointerCapture(event.pointerId);
       } catch (error) {
         // Window-level pointer listeners remain as a fallback.
       }
 
-      // Catch the block and create the next one.
       catchBlock(block);
     });
 
-    // MOBILE: resume the touched block when the finger is lifted.
     function releasePointer(event) {
       const block = pressedPointers.get(event.pointerId);
 
@@ -332,7 +356,8 @@
       block.caught = true;
       catches++;
 
-      // Immediately create the next moving block.
+      updateScore();
+
       createBlock();
     }
 
@@ -348,8 +373,6 @@
     }
 
     function updateBlock(block, timestamp, delta) {
-
-      // Both desktop and mobile use the same pause property.
       if (block.paused) return;
 
       const difficulty = getDifficulty();
@@ -382,7 +405,6 @@
         );
       }
 
-      // Direction changes from 30 catches.
       if (catches >= 30 && timestamp >= block.nextDirectionChange) {
         changeDirection(block);
 
@@ -393,7 +415,6 @@
           );
       }
 
-      // Random jumps from 50 catches.
       if (catches >= 50 && timestamp >= block.nextJump) {
         if (Math.random() < 0.75) {
           changeDirection(block, true);
@@ -402,7 +423,6 @@
         block.nextJump = timestamp + random(250, 900);
       }
 
-      // Extra chaos after 50 catches.
       if (catches >= 50) {
         if (Math.random() < 0.008) {
           changeDirection(block);
@@ -439,7 +459,6 @@
         cancelAnimationFrame(animationId);
       }
 
-      // Clear any old pointer tracking.
       pressedPointers.clear();
 
       blocks.forEach(block => {
@@ -449,6 +468,8 @@
       blocks = [];
       catches = 0;
       lastTime = 0;
+
+      updateScore();
 
       createBlock();
 
