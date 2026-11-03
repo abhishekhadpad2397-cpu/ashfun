@@ -54,7 +54,14 @@
       gap: 18px;
     }
 
-    .score {
+    .game-stats {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .score,
+    .timer {
       font-size: 13px;
       font-weight: 700;
       color: #555;
@@ -117,8 +124,13 @@
         gap: 12px;
       }
 
-      .score {
-        font-size: 12px;
+      .game-stats {
+        gap: 10px;
+      }
+
+      .score,
+      .timer {
+        font-size: 11px;
       }
 
       .back-link {
@@ -144,7 +156,11 @@
   <header class="topbar">
     <div class="topbar-left">
       <a class="brand" href="index.html">ASH<span>FUN</span></a>
-      <div class="score" id="score">Caught: 0</div>
+
+      <div class="game-stats">
+        <div class="score" id="score">CAUGHT: 0</div>
+        <div class="timer" id="timer">TIME: 00:00:00</div>
+      </div>
     </div>
 
     <a class="back-link" href="index.html">Explore More →</a>
@@ -162,11 +178,15 @@
     const arena = document.getElementById("arena");
     const restartButton = document.getElementById("restart-button");
     const scoreDisplay = document.getElementById("score");
+    const timerDisplay = document.getElementById("timer");
 
     let blocks = [];
     let catches = 0;
     let animationId = null;
     let lastTime = 0;
+
+    let gameStartTime = null;
+    let lastTimerUpdate = 0;
 
     const pressedPointers = new Map();
 
@@ -189,8 +209,52 @@
       return Math.random() * (max - min) + min;
     }
 
-    function updateScore() {
-      scoreDisplay.textContent = `Caught: ${catches}`;
+    function formatCaught(value) {
+      if (value >= 1000000) {
+        return (value / 1000000)
+          .toFixed(1)
+          .replace(/\.0$/, "") + "m";
+      }
+
+      if (value >= 1000) {
+        return (value / 1000)
+          .toFixed(1)
+          .replace(/\.0$/, "") + "k";
+      }
+
+      return String(value);
+    }
+
+    function formatElapsedTime(milliseconds) {
+      const totalSeconds = Math.floor(milliseconds / 1000);
+
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+
+      const pad = value => String(value).padStart(2, "0");
+
+      return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+    }
+
+    function updateScore(timestamp = performance.now()) {
+      let elapsed = 0;
+
+      if (gameStartTime !== null) {
+        elapsed = timestamp - gameStartTime;
+      }
+
+      scoreDisplay.textContent = `CAUGHT: ${formatCaught(catches)}`;
+      timerDisplay.textContent = `TIME: ${formatElapsedTime(elapsed)}`;
+    }
+
+    function updateTimer(timestamp) {
+      if (gameStartTime === null) return;
+
+      if (timestamp - lastTimerUpdate >= 250) {
+        updateScore(timestamp);
+        lastTimerUpdate = timestamp;
+      }
     }
 
     function getDifficulty() {
@@ -356,6 +420,11 @@
       block.caught = true;
       catches++;
 
+      if (gameStartTime === null) {
+        gameStartTime = performance.now();
+        lastTimerUpdate = 0;
+      }
+
       updateScore();
 
       createBlock();
@@ -451,6 +520,8 @@
         updateBlock(block, timestamp, delta);
       });
 
+      updateTimer(timestamp);
+
       animationId = requestAnimationFrame(animate);
     }
 
@@ -468,6 +539,9 @@
       blocks = [];
       catches = 0;
       lastTime = 0;
+
+      gameStartTime = null;
+      lastTimerUpdate = 0;
 
       updateScore();
 
