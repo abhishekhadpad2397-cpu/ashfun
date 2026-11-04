@@ -7,9 +7,7 @@
   <title>Catch Me If You Can — ASHFUN</title>
 
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -27,11 +25,12 @@
     }
 
     .topbar {
-      height: 66px;
+      min-height: 66px;
       padding: 0 26px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 12px;
       border-bottom: 1px solid #e7e7e7;
       position: relative;
       z-index: 10;
@@ -42,16 +41,16 @@
       font-size: 19px;
       font-weight: 900;
       letter-spacing: 1.5px;
+      white-space: nowrap;
     }
 
-    .brand span {
-      color: #888;
-    }
+    .brand span { color: #888; }
 
     .topbar-left {
       display: flex;
       align-items: center;
       gap: 18px;
+      flex-wrap: wrap;
     }
 
     .game-stats {
@@ -60,17 +59,28 @@
       gap: 16px;
     }
 
-    .score,
-    .timer {
+    .score, .timer {
       font-size: 13px;
       font-weight: 700;
       color: #555;
       white-space: nowrap;
     }
 
+    .mode-select {
+      border: 1px solid #ddd;
+      border-radius: 7px;
+      padding: 7px 9px;
+      background: #fff;
+      color: #444;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
     .back-link {
       color: #777;
       font-size: 13px;
+      white-space: nowrap;
     }
 
     .arena {
@@ -114,28 +124,109 @@
       color: #111;
     }
 
+    .result-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      background: rgba(255, 255, 255, 0.95);
+      overflow-y: auto;
+    }
+
+    .result-overlay.show { display: flex; }
+
+    .result-card {
+      width: 100%;
+      max-width: 420px;
+      padding: 22px;
+      border: 1px solid #e5e5e5;
+      border-radius: 16px;
+      background: #fff;
+      text-align: center;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+      margin: auto;
+    }
+
+    .result-title {
+      margin: 0 0 5px;
+      font-size: 23px;
+      font-weight: 900;
+      color: #20211e;
+    }
+
+    .result-duration {
+      margin: 0 0 17px;
+      color: #777;
+      font-size: 13px;
+    }
+
+    .challenge-preview {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 9px;
+      border: 1px solid #eee;
+      margin-bottom: 16px;
+    }
+
+    .result-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .result-actions button {
+      padding: 12px 15px;
+      border: 1px solid #ddd;
+      border-radius: 9px;
+      background: #fff;
+      color: #333;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .result-actions button:hover { border-color: #999; }
+
+    .result-actions .share-button {
+      border-color: #20211e;
+      background: #20211e;
+      color: #fff;
+    }
+
+    .result-actions .share-button:hover { background: #383a34; }
+
+    .share-status {
+      min-height: 18px;
+      margin-top: 12px;
+      color: #666;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
     @media (max-width: 600px) {
       .topbar {
-        height: 58px;
-        padding: 0 16px;
+        min-height: 58px;
+        padding: 8px 12px;
+        gap: 8px;
       }
 
-      .topbar-left {
-        gap: 12px;
+      .topbar-left { gap: 9px; }
+      .brand { font-size: 16px; }
+      .game-stats { gap: 8px; }
+
+      .score, .timer { font-size: 10px; }
+
+      .mode-select {
+        padding: 6px 5px;
+        font-size: 10px;
+        max-width: 105px;
       }
 
-      .game-stats {
-        gap: 10px;
-      }
-
-      .score,
-      .timer {
-        font-size: 11px;
-      }
-
-      .back-link {
-        font-size: 11px;
-      }
+      .back-link { font-size: 10px; }
 
       .arena {
         width: calc(100% - 20px);
@@ -147,6 +238,23 @@
         right: 10px;
         bottom: 9px;
       }
+
+      .result-card { padding: 17px; }
+    }
+
+    @media (max-width: 380px) {
+      .topbar { padding: 7px 9px; }
+      .topbar-left { gap: 7px; }
+      .game-stats { gap: 6px; }
+      .brand { font-size: 14px; }
+      .score, .timer { font-size: 9px; }
+
+      .mode-select {
+        max-width: 88px;
+        font-size: 9px;
+      }
+
+      .back-link { font-size: 9px; }
     }
   </style>
 </head>
@@ -161,6 +269,12 @@
         <div class="score" id="score">CAUGHT: 0</div>
         <div class="timer" id="timer">TIME: 00:00:00</div>
       </div>
+
+      <select class="mode-select" id="mode-select" aria-label="Choose game mode">
+        <option value="endless">Endless</option>
+        <option value="60">60 seconds</option>
+        <option value="90">90 seconds</option>
+      </select>
     </div>
 
     <a class="back-link" href="index.html">Explore More →</a>
@@ -172,6 +286,42 @@
     Restart game ↻
   </button>
 
+  <div class="result-overlay" id="result-overlay">
+    <div class="result-card">
+
+      <h2 class="result-title">Time's up!</h2>
+
+      <p class="result-duration" id="result-duration">
+        60-second challenge
+      </p>
+
+      <img
+        class="challenge-preview"
+        id="challenge-preview"
+        alt="Your ASHFUN challenge card"
+      >
+
+      <div class="result-actions">
+
+        <button class="share-button" id="share-button" type="button">
+          Challenge a Friend
+        </button>
+
+        <button id="download-button" type="button">
+          Download Score Card
+        </button>
+
+        <button id="play-again-button" type="button">
+          Play Again ↻
+        </button>
+
+      </div>
+
+      <div class="share-status" id="share-status"></div>
+
+    </div>
+  </div>
+
   <script>
     "use strict";
 
@@ -179,6 +329,15 @@
     const restartButton = document.getElementById("restart-button");
     const scoreDisplay = document.getElementById("score");
     const timerDisplay = document.getElementById("timer");
+    const modeSelect = document.getElementById("mode-select");
+
+    const resultOverlay = document.getElementById("result-overlay");
+    const resultDuration = document.getElementById("result-duration");
+    const challengePreview = document.getElementById("challenge-preview");
+    const shareButton = document.getElementById("share-button");
+    const downloadButton = document.getElementById("download-button");
+    const playAgainButton = document.getElementById("play-again-button");
+    const shareStatus = document.getElementById("share-status");
 
     let blocks = [];
     let catches = 0;
@@ -188,21 +347,21 @@
     let gameStartTime = null;
     let lastTimerUpdate = 0;
 
+    let gameDuration = 0;
+    let gameOver = false;
+
+    let challengeCardBlob = null;
+    let challengeCardUrl = null;
+
     const pressedPointers = new Map();
 
     const BLOCK_SIZE = 10;
+    const GAME_URL = "https://ashfun.pages.dev/block-catcher.html";
 
     const colors = [
-      "#ff4d4d",
-      "#3273ff",
-      "#ffbd2e",
-      "#a855f7",
-      "#16a085",
-      "#ff7a30",
-      "#ec4899",
-      "#222222",
-      "#00a6a6",
-      "#8b5cf6"
+      "#ff4d4d", "#3273ff", "#ffbd2e", "#a855f7",
+      "#16a085", "#ff7a30", "#ec4899", "#222222",
+      "#00a6a6", "#8b5cf6"
     ];
 
     function random(min, max) {
@@ -211,15 +370,11 @@
 
     function formatCaught(value) {
       if (value >= 1000000) {
-        return (value / 1000000)
-          .toFixed(1)
-          .replace(/\.0$/, "") + "m";
+        return (value / 1000000).toFixed(1).replace(/\.0$/, "") + "m";
       }
 
       if (value >= 1000) {
-        return (value / 1000)
-          .toFixed(1)
-          .replace(/\.0$/, "") + "k";
+        return (value / 1000).toFixed(1).replace(/\.0$/, "") + "k";
       }
 
       return String(value);
@@ -227,31 +382,50 @@
 
     function formatElapsedTime(milliseconds) {
       const totalSeconds = Math.floor(milliseconds / 1000);
-
       const hours = Math.floor(totalSeconds / 3600);
       const minutes = Math.floor((totalSeconds % 3600) / 60);
       const seconds = totalSeconds % 60;
-
       const pad = value => String(value).padStart(2, "0");
 
       return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+    }
+
+    function formatCountdown(milliseconds) {
+      const totalSeconds = Math.max(0, Math.ceil(milliseconds / 1000));
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+
+      return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
     }
 
     function updateScore(timestamp = performance.now()) {
       let elapsed = 0;
 
       if (gameStartTime !== null) {
-        elapsed = timestamp - gameStartTime;
+        elapsed = Math.max(0, timestamp - gameStartTime);
       }
 
       scoreDisplay.textContent = `CAUGHT: ${formatCaught(catches)}`;
-      timerDisplay.textContent = `TIME: ${formatElapsedTime(elapsed)}`;
+
+      if (gameDuration > 0) {
+        const remaining = Math.max(0, gameDuration - elapsed);
+        timerDisplay.textContent = `TIME: ${formatCountdown(remaining)}`;
+      } else {
+        timerDisplay.textContent = `TIME: ${formatElapsedTime(elapsed)}`;
+      }
     }
 
     function updateTimer(timestamp) {
-      if (gameStartTime === null) return;
+      if (gameStartTime === null || gameOver) return;
 
-      if (timestamp - lastTimerUpdate >= 250) {
+      const elapsed = Math.max(0, timestamp - gameStartTime);
+
+      if (gameDuration > 0 && elapsed >= gameDuration) {
+        finishGame();
+        return;
+      }
+
+      if (timestamp - lastTimerUpdate >= 100) {
         updateScore(timestamp);
         lastTimerUpdate = timestamp;
       }
@@ -320,8 +494,9 @@
     }
 
     function createBlock() {
-      const style = getBlockStyle();
+      if (gameOver) return;
 
+      const style = getBlockStyle();
       const element = document.createElement("button");
 
       element.type = "button";
@@ -356,7 +531,7 @@
       placeBlock(block);
 
       element.addEventListener("pointerenter", event => {
-        if (event.pointerType !== "mouse") return;
+        if (event.pointerType !== "mouse" || gameOver) return;
 
         block.paused = true;
 
@@ -367,7 +542,6 @@
 
       element.addEventListener("pointerleave", event => {
         if (event.pointerType !== "mouse") return;
-
         block.paused = false;
       });
 
@@ -375,7 +549,7 @@
     }
 
     arena.addEventListener("pointerdown", event => {
-      if (event.pointerType === "mouse") return;
+      if (event.pointerType === "mouse" || gameOver) return;
 
       const target = event.target;
 
@@ -390,7 +564,6 @@
       if (!block || block.caught) return;
 
       block.paused = true;
-
       pressedPointers.set(event.pointerId, block);
 
       try {
@@ -415,18 +588,17 @@
     window.addEventListener("pointercancel", releasePointer, true);
 
     function catchBlock(block) {
-      if (block.caught) return;
+      if (block.caught || gameOver) return;
 
       block.caught = true;
       catches++;
 
       if (gameStartTime === null) {
         gameStartTime = performance.now();
-        lastTimerUpdate = 0;
+        lastTimerUpdate = gameStartTime;
       }
 
-      updateScore();
-
+      updateScore(performance.now());
       createBlock();
     }
 
@@ -435,14 +607,13 @@
 
       if (jump) {
         const bounds = getBounds(block.size);
-
         block.x = random(bounds.minX, bounds.maxX);
         block.y = random(bounds.minY, bounds.maxY);
       }
     }
 
     function updateBlock(block, timestamp, delta) {
-      if (block.paused) return;
+      if (block.paused || gameOver) return;
 
       const difficulty = getDifficulty();
       const bounds = getBounds(block.size);
@@ -460,18 +631,12 @@
 
       if (block.x <= bounds.minX || block.x >= bounds.maxX) {
         block.vx *= -1;
-        block.x = Math.max(
-          bounds.minX,
-          Math.min(bounds.maxX, block.x)
-        );
+        block.x = Math.max(bounds.minX, Math.min(bounds.maxX, block.x));
       }
 
       if (block.y <= bounds.minY || block.y >= bounds.maxY) {
         block.vy *= -1;
-        block.y = Math.max(
-          bounds.minY,
-          Math.min(bounds.maxY, block.y)
-        );
+        block.y = Math.max(bounds.minY, Math.min(bounds.maxY, block.y));
       }
 
       if (catches >= 30 && timestamp >= block.nextDirectionChange) {
@@ -493,26 +658,191 @@
       }
 
       if (catches >= 50) {
-        if (Math.random() < 0.008) {
-          changeDirection(block);
-        }
-
-        if (Math.random() < 0.002) {
-          changeDirection(block, true);
-        }
+        if (Math.random() < 0.008) changeDirection(block);
+        if (Math.random() < 0.002) changeDirection(block, true);
       }
 
       block.element.style.left = `${block.x}px`;
       block.element.style.top = `${block.y}px`;
     }
 
+    // Generate the score card image.
+
+    async function createChallengeCard() {
+      const seconds = gameDuration / 1000;
+
+      const canvas = document.createElement("canvas");
+      canvas.width = 1200;
+      canvas.height = 630;
+
+      const ctx = canvas.getContext("2d");
+
+      ctx.fillStyle = "#20211e";
+      ctx.fillRect(0, 0, 1200, 630);
+
+      ctx.globalAlpha = 0.12;
+      ctx.fillStyle = "#d9ff69";
+
+      ctx.beginPath();
+      ctx.arc(1050, 90, 180, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(100, 600, 150, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.globalAlpha = 1;
+
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 38px Arial";
+      ctx.textAlign = "center";
+      ctx.fillText("ASHFUN", 600, 75);
+
+      ctx.fillStyle = "#d9caff";
+      ctx.font = "bold 34px Arial";
+      ctx.fillText("CATCH ME IF YOU CAN", 600, 145);
+
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 150px Arial";
+      ctx.fillText(String(catches), 600, 330);
+
+      ctx.fillStyle = "#b8b8b2";
+      ctx.font = "bold 27px Arial";
+      ctx.fillText("BLOCKS CAUGHT", 600, 385);
+
+      ctx.fillStyle = "#d9ff69";
+      ctx.font = "bold 35px Arial";
+      ctx.fillText(`IN ${seconds} SECONDS`, 600, 465);
+
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 31px Arial";
+      ctx.fillText("CAN YOU BEAT ME?", 600, 535);
+
+      ctx.fillStyle = "#d9caff";
+      ctx.font = "24px Arial";
+      ctx.fillText("ashfun.pages.dev/block-catcher.html", 600, 590);
+
+      return new Promise((resolve, reject) => {
+        canvas.toBlob(blob => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error("Could not create score card."));
+          }
+        }, "image/png");
+      });
+    }
+
+    function finishGame() {
+      if (gameOver) return;
+
+      gameOver = true;
+
+      const seconds = gameDuration / 1000;
+
+      updateScore(gameStartTime + gameDuration);
+
+      resultDuration.textContent = `${seconds}-second challenge`;
+      shareStatus.textContent = "Preparing your score card...";
+
+      resultOverlay.classList.add("show");
+
+      createChallengeCard()
+        .then(blob => {
+          challengeCardBlob = blob;
+
+          if (challengeCardUrl) {
+            URL.revokeObjectURL(challengeCardUrl);
+          }
+
+          challengeCardUrl = URL.createObjectURL(blob);
+          challengePreview.src = challengeCardUrl;
+
+          shareStatus.textContent = "";
+        })
+        .catch(() => {
+          shareStatus.textContent = "Could not create the score card.";
+        });
+    }
+
+    // Copy the challenge message. No messaging app is opened.
+
+    async function shareChallenge() {
+      const modeText = gameDuration === 0
+        ? "Endless mode"
+        : `${gameDuration / 1000}-second challenge`;
+
+      const message =
+        `🎯 I caught ${catches} blocks in Catch Me If You Can!\n\n` +
+        `Mode: ${modeText}\n\n` +
+        `Think you can beat my score?\n\n` +
+        `Play here:\n${GAME_URL}`;
+
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(message);
+        } else {
+          throw new Error("Clipboard API unavailable");
+        }
+
+        shareStatus.textContent =
+          "Challenge copied! Paste it wherever you want to share it.";
+      } catch (error) {
+        const textArea = document.createElement("textarea");
+
+        textArea.value = message;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-9999px";
+        textArea.style.top = "0";
+
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+
+        let copied = false;
+
+        try {
+          copied = document.execCommand("copy");
+        } catch (copyError) {
+          copied = false;
+        }
+
+        textArea.remove();
+
+        if (copied) {
+          shareStatus.textContent =
+            "Challenge copied! Paste it wherever you want to share it.";
+        } else {
+          shareStatus.textContent =
+            "Could not copy automatically. Please copy the game link manually: " + GAME_URL;
+        }
+      }
+    }
+
+    // Download the score card.
+
+    function downloadChallengeCard() {
+      if (!challengeCardBlob || !challengeCardUrl) {
+        shareStatus.textContent = "Your score card is still being prepared.";
+        return;
+      }
+
+      const link = document.createElement("a");
+
+      link.href = challengeCardUrl;
+      link.download = "ashfun-challenge.png";
+
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      shareStatus.textContent = "Score card downloaded!";
+    }
+
     function animate(timestamp) {
       if (!lastTime) lastTime = timestamp;
 
-      const delta = Math.min(
-        (timestamp - lastTime) / 16.67,
-        2
-      );
+      const delta = Math.min((timestamp - lastTime) / 16.67, 2);
 
       lastTime = timestamp;
 
@@ -522,12 +852,15 @@
 
       updateTimer(timestamp);
 
-      animationId = requestAnimationFrame(animate);
+      if (!gameOver) {
+        animationId = requestAnimationFrame(animate);
+      }
     }
 
     function startGame() {
       if (animationId !== null) {
         cancelAnimationFrame(animationId);
+        animationId = null;
       }
 
       pressedPointers.clear();
@@ -543,7 +876,24 @@
       gameStartTime = null;
       lastTimerUpdate = 0;
 
-      updateScore();
+      gameOver = false;
+
+      gameDuration = modeSelect.value === "endless"
+        ? 0
+        : Number(modeSelect.value) * 1000;
+
+      resultOverlay.classList.remove("show");
+      shareStatus.textContent = "";
+
+      challengeCardBlob = null;
+      challengePreview.removeAttribute("src");
+
+      if (challengeCardUrl) {
+        URL.revokeObjectURL(challengeCardUrl);
+        challengeCardUrl = null;
+      }
+
+      updateScore(performance.now());
 
       createBlock();
 
@@ -551,6 +901,10 @@
     }
 
     restartButton.addEventListener("click", startGame);
+    modeSelect.addEventListener("change", startGame);
+    playAgainButton.addEventListener("click", startGame);
+    shareButton.addEventListener("click", shareChallenge);
+    downloadButton.addEventListener("click", downloadChallengeCard);
 
     window.addEventListener("resize", () => {
       blocks.forEach(block => {
